@@ -80,4 +80,12 @@ class TransactionController extends Controller
 
         return response()->json(['message' => 'Debit transaction created successfully', 'transaction' => $transaction], 201);
     }
+
+    public function getAllTrasacionsByNumber($phone_number)
+    {
+        $transaction = Transaction::all()->where('vcard', $phone_number);
+        return $transaction;
+        //return response()->json(['transaction' => $transaction], 200);
+        //return response()->json(['vcard' => $vcard], 200);
+    }
 }

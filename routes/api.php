@@ -7,6 +7,8 @@ use App\Http\Controllers\DefaultCategoryController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\VCardController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\TransactionController;
+use App\Models\Transaction;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,11 +28,13 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::resource('users', UserController::class);
 Route::resource('default_categories', DefaultCategoryController::class);
 
-Route::get('vcards/{vcard}/categories', [CategoryController::class, 'index']);
-Route::get('vcards/{vcard}/categories/{id}', [CategoryController::class, 'show']);
+//Route::get('vcards/{vcard}/categories', [CategoryController::class, 'index']);
+//Route::get('vcards/{vcard}/categories/{id}', [CategoryController::class, 'show']);
+Route::get('vcards/{vcard}/transactions', [TransactionController::class, 'getAllTrasacionsByNumber']);
 //Route::resource('vcards.categories', CategoryController::class);
 
-Route::get('vcards', [VCardController::class, 'index']);
+Route::get('vcards/{phone_number}', [VCardController::class, 'show']);
+Route::get('vcards/{phone_number}/foto', [VCardController::class, 'getVCardImage']);
 Route::resource('vcards', VCardController::class);
 
 
@@ -38,3 +42,4 @@ Route::post('credit-transaction', [PaymentController::class, 'createCreditTransa
 Route::post('debit-transaction', [PaymentController::class, 'createDebitTransaction']);
 
 
+//http://dad-202324-payments-api.test/api/vcards/900000015/categories/900000015
