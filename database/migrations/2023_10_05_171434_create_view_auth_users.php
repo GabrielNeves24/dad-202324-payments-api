@@ -12,6 +12,7 @@ class CreateViewAuthUsers extends Migration
      */
     public function up()
     {
+        DB::statement('DROP VIEW IF EXISTS VIEW_AUTH_USERS');
         $query = "
             CREATE VIEW VIEW_AUTH_USERS AS
             SELECT id, 'A' AS user_type, email AS username, password, NULL AS confirmation_code, name, email, 0 AS blocked, NULL AS photo_url, NULL AS deleted_at

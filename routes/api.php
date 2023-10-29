@@ -30,20 +30,22 @@ use App\Models\Payment;
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 
-Route::middleware('auth:api')->group(function () {
-    // Protected routes
-    Route::get('users', [UserController::class, 'getAllUsers']);
-    Route::get('vcards', [VCardController::class, 'getAllVCards']);
-    Route::get('vcards/{phone_number}', [VCardController::class, 'getVCardsbyphoneNumber']);
-    Route::get('vcards/{phone_number}/foto', [VCardController::class, 'getVCardImage']);
-});
+// Route::middleware('auth:api')->group(function () {
+//     // Protected routes
+//     Route::get('users', [UserController::class, 'getAllUsers']);
+//     Route::get('vcards', [VCardController::class, 'getAllVCards']);
+//     Route::get('vcards/{phone_number}', [VCardController::class, 'getVCardsbyphoneNumber']);
+//     Route::get('vcards/{phone_number}/foto', [VCardController::class, 'getVCardImage']);
+// });
 
-// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+// Route::middleware('auth:api')->get('/user', function (Request $request) {
 //     return $request->user();
 // });
 
-//Route::resource('users', UserController::class);
-//Route::resource('default_categories', DefaultCategoryController::class);
+Route::get('users', [UserController::class, 'getAllUsers']);
+Route::get('vcards', [VCardController::class, 'getAllVCards']);
+Route::get('vcards/{phone_number}', [VCardController::class, 'getVCardsbyphoneNumber']);
+Route::get('vcards/{phone_number}/foto', [VCardController::class, 'getVCardImage']);
 
 //Route::get('vcards/{vcard}/categories', [CategoryController::class, 'index']);
 //Route::get('vcards/{vcard}/categories/{id}', [CategoryController::class, 'show']);
