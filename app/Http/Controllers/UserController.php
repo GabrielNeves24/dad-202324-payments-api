@@ -7,6 +7,12 @@ use App\Models\User;
 
 class UserController extends Controller
 {
+    public function getAllUsers()
+    {
+        $users = User::all();
+        return response()->json(['users' => $users], 200);
+    }
+
     public function index()
     {
         $users = User::all();

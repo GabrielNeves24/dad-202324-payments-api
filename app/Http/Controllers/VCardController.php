@@ -7,13 +7,18 @@ use App\Models\VCard;
 
 class VCardController extends Controller
 {
-    public function index()
+    public function index(){
+        $vcards = VCard::all();
+        return response()->json(['vcards' => $vcards], 200);
+    }
+
+    public function getAllVCards()
     {
         $vcards = VCard::all();
         return response()->json(['vcards' => $vcards], 200);
     }
 
-    public function show($phone_number)
+    public function getVCardsbyphoneNumber($phone_number)
     {
         $vcard = VCard::findOrFail($phone_number);
         return $vcard;
