@@ -31,21 +31,27 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 
 // Route::middleware('auth:api')->group(function () {
-//     // Protected routes
-//     Route::get('users', [UserController::class, 'getAllUsers']);
-//     Route::get('vcards', [VCardController::class, 'getAllVCards']);
-//     Route::get('vcards/{phone_number}', [VCardController::class, 'getVCardsbyphoneNumber']);
-//     Route::get('vcards/{phone_number}/foto', [VCardController::class, 'getVCardImage']);
+//     Route::get('/users', function (Request $request) {
+//         return $request->user();
+//     });
 // });
+
+ Route::middleware('auth:api')->group(function () {
+     // Protected routes
+     Route::get('users', [UserController::class, 'getAllUsers']);
+     Route::get('vcards', [VCardController::class, 'getAllVCards']);
+     Route::get('vcards/{phone_number}', [VCardController::class, 'getVCardsbyphoneNumber']);
+     Route::get('vcards/{phone_number}/foto', [VCardController::class, 'getVCardImage']);
+ });
 
 // Route::middleware('auth:api')->get('/user', function (Request $request) {
 //     return $request->user();
 // });
 
-Route::get('users', [UserController::class, 'getAllUsers']);
-Route::get('vcards', [VCardController::class, 'getAllVCards']);
-Route::get('vcards/{phone_number}', [VCardController::class, 'getVCardsbyphoneNumber']);
-Route::get('vcards/{phone_number}/foto', [VCardController::class, 'getVCardImage']);
+// Route::get('users', [UserController::class, 'getAllUsers']);
+// Route::get('vcards', [VCardController::class, 'getAllVCards']);
+// Route::get('vcards/{phone_number}', [VCardController::class, 'getVCardsbyphoneNumber']);
+// Route::get('vcards/{phone_number}/foto', [VCardController::class, 'getVCardImage']);
 
 //Route::get('vcards/{vcard}/categories', [CategoryController::class, 'index']);
 //Route::get('vcards/{vcard}/categories/{id}', [CategoryController::class, 'show']);

@@ -37,7 +37,7 @@ class AuthController extends Controller
         
     public function login(Request $request)
     {
-        // Validate the request data
+         // Validate the request data
         $validatedData = $request->validate([
             'email' => 'required|string|email|max:255',
             'password' => 'required|string',
@@ -51,16 +51,20 @@ class AuthController extends Controller
         // Get the authenticated user
         $user = $request->user();
 
-        // Issue a token for the user
-        $token = $user->createToken('auth_token')->plainTextToken;
+        // Issue a token for the user and retrieve the plain text token
+        $token = $user->createToken('auth_token');
 
         // Return the token as a response
         return response()->json([
             'user' => Auth::user(),
-            'access_token' => $token,
+            'access_token' => $token->accessToken,
             'token_type' => 'Bearer',
         ]);
     }
+
+    
+
+
 
     public function logout (Request $request) {
         $token = $request->user()->token();
