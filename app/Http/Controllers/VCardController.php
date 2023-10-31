@@ -34,13 +34,13 @@ class VCardController extends Controller
         // Check if the image file exists
         if (file_exists($imagePath)) {
             // Return the image as a response
-            return response()->file($imagePath, ['Content-Type' => 'image/jpeg']);
+            return response()->file($imagePath, ['Content-Type' => 'image/jpg']);
         }
 
         // If the image doesn't exist, return a default image or an error response
         $defaultImagePath = public_path('storage/fotos/default.jpg');
         if (file_exists($defaultImagePath)) {
-            return response()->file($defaultImagePath, ['Content-Type' => 'image/jpeg']);
+            return response()->file($defaultImagePath, ['Content-Type' => 'image/jpg']);
         } else {
             // If the default image doesn't exist, you can return a 404 response
             return response('Image not found', 404);

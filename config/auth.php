@@ -18,6 +18,11 @@ return [
         'passwords' => 'users',
     ],
 
+    // 'cliente' => [
+    //     'guard' => 'web2',
+    //     'passwords' => 'vcards',
+    // ],
+
     /*
     |--------------------------------------------------------------------------
     | Authentication Guards
@@ -46,6 +51,15 @@ return [
             'provider' => 'users',
             'hash' => false,
         ],
+        // 'web2' => [
+        //     'driver' => 'session',
+        //     'provider' => 'vcards',
+        // ],
+        //  // add for vcards
+        //  'vcard' => [
+        //      'driver' => 'passport',
+        //      'provider' => 'vcards',
+        //  ],
     ],
 
     
@@ -78,6 +92,10 @@ return [
         //     'driver' => 'database',
         //     'table' => 'users',
         // ],
+           'vcards' => [
+             'driver' => 'eloquent',
+             'model' => App\Models\Vcard::class,
+         ],
     ],
 
     /*
