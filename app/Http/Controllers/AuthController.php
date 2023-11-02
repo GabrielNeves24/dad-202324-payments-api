@@ -5,6 +5,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use App\Models\VCard;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
@@ -150,21 +151,34 @@ class AuthController extends Controller
     private function loginByPhoneNumber(Request $request)
     {
         // Validate the request data
-        $validatedData = $request->validate([
+        $validator = Validator::make($request->all(), [
             'phone_number' => 'required|string',
             'password' => 'required|string',
         ]);
+        if($validator->fails()){
+            return response()->json(['error' => $validator->errors()->all()]);
+        }
 
         // Attempt to log in the VCard
-        if (Auth::guard('web2')->attempt($validatedData)) {
-            $vCard = Auth::guard('web2')->user();
-            $token = $vCard->createToken('auth_token');
+        if (Auth::guard('vcard')->attempt(['phone_number' => request('phone_number'), 'password' => request('password')])) {
+            config(['auth.guards.api.provider' => 'vcard']);
 
+            // $vCard = Auth::guard('web2')->user();
+            // $token = $vCard->createToken('auth_token');
+            $vcard = Vcard::find(auth()->guard('vcard')->user()->phone_number);
+            $success =  $vcard;
+            $success['token'] =  $vcard->createToken('auth_token')->accessToken; 
             return response()->json([
-                'vcard' => $vCard,
-                'access_token' => $token->accessToken,
+                'vcard' => $vcard,
+                'access_token' => $success['token'],
                 'token_type' => 'Bearer',
             ]);
+
+            // return response()->json([
+            //     'vcard' => $vCard,
+            //     'access_token' => $token->accessToken,
+            //     'token_type' => 'Bearer',
+            // ]);
         } else {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }

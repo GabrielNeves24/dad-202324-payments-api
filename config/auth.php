@@ -51,15 +51,15 @@ return [
             'provider' => 'users',
             'hash' => false,
         ],
-        // 'web2' => [
-        //     'driver' => 'session',
-        //     'provider' => 'vcards',
-        // ],
-        //  // add for vcards
-        //  'vcard' => [
-        //      'driver' => 'passport',
-        //      'provider' => 'vcards',
-        //  ],
+        'vcard' => [
+            'driver' => 'session',
+            'provider' => 'vcards',
+        ],
+        'vcard-api'=>[
+            'driver'=>'passport',
+            'provider'=>'vcards',
+            'hash'=>false,
+        ],
     ],
 
     
@@ -92,9 +92,9 @@ return [
         //     'driver' => 'database',
         //     'table' => 'users',
         // ],
-           'vcards' => [
-             'driver' => 'eloquent',
-             'model' => App\Models\Vcard::class,
+        'vcards' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Vcard::class,
          ],
     ],
 
