@@ -36,13 +36,17 @@ Route::post('/register', [AuthController::class, 'register']);
 //     });
 // });
 
- Route::middleware('auth:api')->group(function () {
-     // Protected routes
-     Route::get('users', [UserController::class, 'getAllUsers']);
-     Route::get('vcards', [VCardController::class, 'getAllVCards']);
-     Route::get('vcards/{phone_number}', [VCardController::class, 'getVCardsbyphoneNumber']);
-     Route::get('vcards/{phone_number}/foto', [VCardController::class, 'getVCardImage']);
- });
+Route::middleware('auth:api')->group(function () {
+    // Routes for regular users protected by the 'api' guard
+    Route::get('users', [UserController::class, 'getAllUsers']);
+});
+Route::get('vcards/{phone_number}/foto', [VCardController::class, 'getVCardImage']);
+Route::middleware('auth:vcard-api')->group(function () {
+    // Routes for VCard users protected by the 'vcard-api' guard
+    Route::get('vcards', [VCardController::class, 'getAllVCards']);
+    Route::get('vcards/{phone_number}', [VCardController::class, 'getVCardsbyphoneNumber']);
+    
+});
 
 // Route::middleware('auth:api')->get('/user', function (Request $request) {
 //     return $request->user();

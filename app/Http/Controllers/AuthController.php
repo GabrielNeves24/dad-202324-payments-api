@@ -111,7 +111,7 @@ class AuthController extends Controller
             'phone_number' => $validatedData['phone_number'],
             'name' => $validatedData['name'],
             'email' => $validatedData['email'],
-            'photo_url' => null,
+            'photo_url' => 'image|mimes:jpeg,jpg|max:4096',
             'password' => bcrypt($validatedData['password']),
             'confirmation_code' => bcrypt($validatedData['confirmation_code']),
             'blocked' => 0,
@@ -120,17 +120,16 @@ class AuthController extends Controller
         ]);
 
         // Upload the photo if it exists
-        if ($request->hasFile('photo')) {
-            $photo = $request->file('photo');
-            $filename = $vCard->phone_number . '.' . $photo->getClientOriginalExtension();
-            $photo->storeAs('public/storage/fotos', $filename);
-            $vCard->photo_url = $filename; // Corrected to use 'photo_url'
-            $vCard->save();
+        if ($request->hasFile('photo_url')) {
+            $picture = $request->file('photo_url');
+            $picturePath = $picture->store('fotos', 'public'); // Store in the public storage, under "uploads" folder
+            // Save the image URL in the database
+            $vCard->photo_url = url('storage/' . $picturePath);
         }
 
         // Issue a token for the user
         $token = $vCard->createToken('auth_token')->accessToken;
-
+        $vCard->save();
         // Retunr the data to my Vue3 axios 
         return response()->json([
             'vCard' => $vCard,
@@ -190,6 +189,7 @@ class AuthController extends Controller
         $validatedData = $request->validate([
             'email' => 'required|string|email',
             'password' => 'required|string',
+            'name' => 'required|string|max:255',
         ]);
 
         // Attempt to log in the user
