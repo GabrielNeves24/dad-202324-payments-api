@@ -72,6 +72,10 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
         ]);
+        //verificar se não existe um user com o mesmo email
+        if (User::where('email', '=', $validatedData['email'])->exists()) {
+            return response()->json(['error' => 'Email já existe'], 401);
+        }
 
         // Create the user
          $user = User::create([
@@ -106,6 +110,10 @@ class AuthController extends Controller
             'photo' => 'nullable|image|max:2048',
             'confirmation_code' => 'required|digits:4',
         ]);
+        //verificar se não existe um user com o mesmo PHONE_NUMBER
+        if (VCard::where('phone_number', '=', $validatedData['phone_number'])->exists()) {
+            return response()->json(['error' => 'Telefone já existe'], 401);
+        }
         // Create a new VCard for the user
         $vCard = Vcard::create([
             'phone_number' => $validatedData['phone_number'],

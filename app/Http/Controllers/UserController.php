@@ -10,20 +10,16 @@ class UserController extends Controller
     public function getAllUsers()
     {
         $users = User::all();
-        return User::all();//response()->json(['users' => $users], 200);
-    }
-
-    public function index()
-    {
-        $users = User::all();
+        //return User::all();//response()->json(['users' => $users], 200);
         return response()->json(['users' => $users], 200);
     }
-
-    public function show($id)
+    
+    public function getUserById($id)
     {
         $user = User::findOrFail($id);
         return response()->json(['user' => $user], 200);
     }
+
 
     public function store(Request $request)
     {

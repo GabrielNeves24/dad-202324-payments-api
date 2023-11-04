@@ -29,6 +29,7 @@ use App\Models\Payment;
 */
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
+Route::post('/logout' , [AuthController::class, 'logout'])->middleware('auth:api');
 
 // Route::middleware('auth:api')->group(function () {
 //     Route::get('/users', function (Request $request) {
@@ -40,6 +41,8 @@ Route::middleware('auth:api')->group(function () {
     // Routes for regular users protected by the 'api' guard
     Route::get('users', [UserController::class, 'getAllUsers']);
     Route::get('vcards', [VCardController::class, 'getAllVCards']);
+    Route::delete('vcards/{phone_number}', [VCardController::class, 'deleteVCard']);
+    Route::put('vcards/{phone_number}', [VCardController::class, 'updateVCard']);
 });
 Route::get('vcards/{phone_number}/foto', [VCardController::class, 'getVCardImage']);
 Route::middleware('auth:vcard-api')->group(function () {
