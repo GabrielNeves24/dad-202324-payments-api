@@ -6,6 +6,8 @@ use App\Models\Transaction;
 use Illuminate\Http\Request;
 use App\Models\VCard;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use App\Models\Category;
 
 class VCardController extends Controller
 {
@@ -72,6 +74,50 @@ class VCardController extends Controller
         ]);
 
         return response()->json(['vcard' => $vcard], 200);
+    }
+
+    public function getCategoriesbyphoneNumber($phone_number)
+    {
+        //$vcard = VCard::findOrFail($phone_number);
+        $categories = Category::where('vcard', $phone_number)->get();
+        //caso vazia sem categorias
+        if($categories->isEmpty()){
+            return response()->json(['message' => `VCard $phone_number não tem categorias`], 404);
+        }
+        return response()->json(['categories' => $categories], 200);
+    }
+
+    public function getCategoriesbyphoneNumberDebit($phone_number)
+    {
+        //$vcard = VCard::findOrFail($phone_number);
+        $categories = Category::where('vcard', $phone_number)->where('type', 'D')->get();
+        //caso vazia sem categorias
+        if($categories->isEmpty()){
+            return response()->json(['message' => `VCard $phone_number não tem categorias`], 404);
+        }
+        return response()->json(['categories' => $categories], 200);
+    }
+
+    public function getCategoriesbyphoneNumberCredit($phone_number)
+    {
+        //$vcard = VCard::findOrFail($phone_number);
+        $categories = Category::where('vcard', $phone_number)->where('type', 'C')->get();
+        //caso vazia sem categorias
+        if($categories->isEmpty()){
+            return response()->json(['message' => `VCard $phone_number não tem categorias`], 404);
+        }
+        return response()->json(['categories' => $categories], 200);
+    }
+
+    public function getTransactionsbyphoneNumber($phone_number)
+    {
+        //$vcard = VCard::findOrFail($phone_number);
+        $transactions = Transaction::where('vcard', $phone_number)->orderBy('date','desc')->get();
+        //caso vazia sem categorias
+        if($transactions->isEmpty()){
+            return response()->json(['message' => `VCard $phone_number não tem transações`], 404);
+        }
+        return response()->json(['transactions' => $transactions], 200);
     }
 
     public function updateConfirmationCode(Request $request, $phone_number)

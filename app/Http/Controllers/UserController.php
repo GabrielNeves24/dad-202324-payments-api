@@ -51,6 +51,33 @@ class UserController extends Controller
 
     }
 
+    public function createUser(Request $request)
+    {
+        // Validate the request data
+        $validatedData = $request->validate([
+            'password' => 'required|string|min:8',
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+        ]);
+        //verificar se não existe um user com o mesmo email
+        if (User::where('email', '=', $validatedData['email'])->exists()) {
+            return response()->json(['error' => 'Email já existe'], 401);
+        }
+
+        // Create the user
+         $user = User::create([
+             'password' => bcrypt($validatedData['password']),
+             'name' => $validatedData['name'],
+             'email' => $validatedData['email'],
+             'remeber_token' => 'null',
+             'email_verified_at' => 'null',
+         ]);
+         $user->save();
+        // Retunr the data to my Vue3 axios 
+        return response()->json(['message' => 'User criado com sucesso'], 201);
+
+    }
+
 
     public function store(Request $request)
     {

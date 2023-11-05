@@ -41,7 +41,7 @@ Route::middleware('auth:api')->group(function () {
     // Routes for regular users protected by the 'api' guard
     Route::get('users', [UserController::class, 'getAllUsers']);
     Route::post('verify-password', [UserController::class, 'verifyPassword']);
-
+    Route::post('users', [UserController::class, 'createUser']);
     //get user logon
     Route::get('users/{id}', [UserController::class, 'getUser']);
     Route::get('vcards', [VCardController::class, 'getAllVCards']);
@@ -51,11 +51,17 @@ Route::middleware('auth:api')->group(function () {
 
 });
 Route::get('vcards/{phone_number}/foto', [VCardController::class, 'getVCardImage']);
+
 Route::middleware('auth:vcard-api')->group(function () {
     // Routes for VCard users protected by the 'vcard-api' guard
     //Route::get('vcards', [VCardController::class, 'getAllVCards']);
     Route::get('vcards/{phone_number}', [VCardController::class, 'getVCardsbyphoneNumber']);
     Route::put('vcards/{phone_number}', [VCardController::class, 'updateVCard']);
+    Route::get('vcards/{phone_number}/categories', [VCardController::class, 'getCategoriesbyphoneNumber']);
+    Route::get('vcards/{phone_number}/categories/debit', [VCardController::class, 'getCategoriesbyphoneNumberCredit']);
+    Route::get('vcards/{phone_number}/categories/credit', [VCardController::class, 'getCategoriesbyphoneNumberDebit']);
+    Route::get('vcards/{phone_number}/transactions/all', [VCardController::class, 'getTransactionsbyphoneNumber']);
+    Route::post('transactions/debit', [TransactionController::class, 'store']);
     Route::post('verify-password', [UserController::class, 'verifyPassword']);
     
 });
