@@ -169,6 +169,26 @@ class VCardController extends Controller
     }
 
     public function updateVCard(Request $request, $phone_number){
+        // Validate the incoming request data
+        $validatedData = $request->validate([
+            'name' => 'required|string', // Add any validation rules you need
+            'email' => 'required|email',  // Add any validation rules you need
+        ]);
+
+        // Check if the VCard with the provided phone number exists
+        $vcard = VCard::where('phone_number', $phone_number)->first();
+
+        if (!$vcard) {
+            return response()->json(['message' => "VCard $phone_number não encontrado"], 404);
+        }
+
+        // Update the VCard with the validated data
+        $vcard->update($validatedData);
+
+        return response()->json(['message' => "VCard $phone_number atualizado com sucesso"], 200);
+    }
+
+    public function updateVCardUser(Request $request, $phone_number){
         //caso o vcard não exista, retorna erro
         $teste = $phone_number;
         if(!VCard::where('phone_number', $phone_number)->exists()){

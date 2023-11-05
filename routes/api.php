@@ -40,15 +40,23 @@ Route::post('/logout' , [AuthController::class, 'logout'])->middleware('auth:api
 Route::middleware('auth:api')->group(function () {
     // Routes for regular users protected by the 'api' guard
     Route::get('users', [UserController::class, 'getAllUsers']);
+    Route::post('verify-password', [UserController::class, 'verifyPassword']);
+
+    //get user logon
+    Route::get('users/{id}', [UserController::class, 'getUser']);
     Route::get('vcards', [VCardController::class, 'getAllVCards']);
+    Route::get('vcards/{phone_number}', [VCardController::class, 'getVCardsbyphoneNumber']);
     Route::delete('vcards/{phone_number}', [VCardController::class, 'deleteVCard']);
-    Route::put('vcards/{phone_number}', [VCardController::class, 'updateVCard']);
+    Route::put('vcards/user/{phone_number}', [VCardController::class, 'updateVCardUser']);
+
 });
 Route::get('vcards/{phone_number}/foto', [VCardController::class, 'getVCardImage']);
 Route::middleware('auth:vcard-api')->group(function () {
     // Routes for VCard users protected by the 'vcard-api' guard
     //Route::get('vcards', [VCardController::class, 'getAllVCards']);
     Route::get('vcards/{phone_number}', [VCardController::class, 'getVCardsbyphoneNumber']);
+    Route::put('vcards/{phone_number}', [VCardController::class, 'updateVCard']);
+    Route::post('verify-password', [UserController::class, 'verifyPassword']);
     
 });
 

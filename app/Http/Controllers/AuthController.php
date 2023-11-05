@@ -111,9 +111,7 @@ class AuthController extends Controller
             'confirmation_code' => 'required|digits:4',
         ]);
         //verificar se não existe um user com o mesmo PHONE_NUMBER
-        if (VCard::where('phone_number', '=', $validatedData['phone_number'])->exists()) {
-            return response()->json(['error' => 'Telefone já existe'], 401);
-        }
+        
         // Create a new VCard for the user
         $vCard = Vcard::create([
             'phone_number' => $validatedData['phone_number'],
@@ -152,6 +150,26 @@ class AuthController extends Controller
             return $this->loginByPhoneNumber($request);
         } else {
             return $this->loginByEmail($request);
+        }
+    }
+
+    public function verifyPassword(Request $request)
+    {
+        $enteredPassword = $request->input('entered_password');
+        $userType = $request->input('user_type');
+        if ($userType == 'user') {
+            $user = User::where('id', '=', $request->user)->firstOrFail();
+        } else {
+            $user = Vcard::where('phone_number', '=', $request->user)->firstOrFail();
+        }
+
+        // Compare the entered password with the stored hashed password
+        if (Hash::check($enteredPassword, $user->password)) {
+            // Password is correct
+            return response()->json(['message' => 'Password is correct'], 200);
+        } else {
+            // Password is incorrect
+            return response()->json(['message' => 'Password is incorrecttttt'], 400);
         }
     }
 

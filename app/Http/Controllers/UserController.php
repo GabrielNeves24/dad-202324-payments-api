@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\VCard;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -18,6 +21,34 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
         return response()->json(['user' => $user], 200);
+    }
+
+    public function getUser($id)
+    {
+        $user = User::findOrFail($id);
+        return response()->json(['user' => $user], 200);
+    }
+
+    public function verifyPassword(Request $request)
+    {
+        $enteredPassword = $request->input('enteredpassword');
+        $userType = $request->input('userType');
+        $id = $request->input('user');
+        if ($userType == 'user') {
+            $user = User::where('id', $id)->first();
+        } else {
+            $user = VCard::where('phone_number', $id)->first();
+        }
+
+        // Compare the entered password with the stored hashed password
+        if (Hash::check($enteredPassword, $user->password)) {
+            // Password is correct
+            return response()->json(['message' => 'Password is correct'], 200);
+        } else {
+            // Password is incorrect
+            return response()->json(['message' => 'Password is incorrect'], 400);
+        }
+
     }
 
 
