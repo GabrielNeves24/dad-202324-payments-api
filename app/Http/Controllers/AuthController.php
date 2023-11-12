@@ -6,6 +6,11 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\VCard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cookie;
 
 class AuthController extends Controller
 {
@@ -128,7 +133,7 @@ class AuthController extends Controller
         // Upload the photo if it exists
         if ($request->hasFile('photo_url')) {
             $picture = $request->file('photo_url');
-            $picturePath = $picture->store('fotos', 'public'); // Store in the public storage, under "uploads" folder
+            $picturePath = $picture->store('fotos', 'public'); // Store in the public storage
             // Save the image URL in the database
             $vCard->photo_url = url('storage/' . $picturePath);
         }
@@ -193,11 +198,12 @@ class AuthController extends Controller
             $vcard = Vcard::find(auth()->guard('vcard')->user()->phone_number);
             $success =  $vcard;
             $success['token'] =  $vcard->createToken('auth_token')->accessToken; 
+            $cookie = cookie('laravel_token', $success['token'], 60, null, null, true, true);
             return response()->json([
                 'vcard' => $vcard,
                 'access_token' => $success['token'],
                 'token_type' => 'Bearer',
-            ]);
+            ])->withCookie($cookie);
 
             // return response()->json([
             //     'vcard' => $vCard,
