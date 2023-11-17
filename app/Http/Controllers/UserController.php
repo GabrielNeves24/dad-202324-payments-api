@@ -7,9 +7,15 @@ use App\Models\User;
 use App\Models\VCard;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Http\Resources\UserResource;
 
 class UserController extends Controller
 {
+    public function show_me(Request $request)
+    {
+        return new UserResource($request->user());
+    }
+
     public function getAllUsers()
     {
         $users = User::all();

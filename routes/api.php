@@ -38,6 +38,15 @@ Route::post('/logout' , [AuthController::class, 'logout'])->middleware('auth:api
 // });
 
 Route::middleware('auth:api')->group(function () {
+    Route::get('users/me', [UserController::class, 'show_me']);
+    
+    
+    
+    
+    
+    
+    
+    
     // Routes for regular users protected by the 'api' guard
     Route::get('users', [UserController::class, 'getAllUsers']);
     Route::post('verify-password', [UserController::class, 'verifyPassword']);

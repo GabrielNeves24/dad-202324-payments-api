@@ -11,9 +11,48 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Http;
+
+
 
 class AuthController extends Controller
 {
+    private function passportAuthenticationData($username, $password)
+    {
+        return [
+            'grant_type' => 'password',
+            'client_id' => env('PASSPORT_CLIENT_ID'),
+            'client_secret' => env('PASSPORT_CLIENT_SECRET'),
+            'username' => $username,
+            'password' => $password,
+            'scope' => ''
+        ];
+    }
+
+    public function login(Request $request)
+    {
+        try {
+            request()->request->add($this->passportAuthenticationData($request->username, $request->password));
+            $request = Request::create(env('PASSPORT_SERVER_URL') . '/oauth/token', 'POST');
+            $response = Route::dispatch($request);
+            $errorCode = $response->getStatusCode();
+            $auth_server_response = json_decode((string) $response->content(), true);
+            return response()->json($auth_server_response, $errorCode);
+        } catch (Exception $e) {
+            return response()->json('Authentication has failed!', 401);
+        }
+    }
+
+    public function logout(Request $request)
+    {
+        $accessToken = $request->user()->token();
+        $token = $request->user()->tokens->find($accessToken);
+        $token->revoke();
+        $token->delete();
+        return response(['msg' => 'Token revoked'], 200);
+    }
+    
     // public function register(Request $request)
     // {
     //     // Validate the request data
@@ -149,14 +188,14 @@ class AuthController extends Controller
         ]);
     }
         
-    public function login(Request $request)
-    {
-        if ($request->has('phone_number')) {
-            return $this->loginByPhoneNumber($request);
-        } else {
-            return $this->loginByEmail($request);
-        }
-    }
+    // public function login(Request $request)
+    // {
+    //     if ($request->has('phone_number')) {
+    //         return $this->loginByPhoneNumber($request);
+    //     } else {
+    //         return $this->loginByEmail($request);
+    //     }
+    // }
 
     public function verifyPassword(Request $request)
     {
@@ -178,74 +217,74 @@ class AuthController extends Controller
         }
     }
 
-    private function loginByPhoneNumber(Request $request)
-    {
-        // Validate the request data
-        $validator = Validator::make($request->all(), [
-            'phone_number' => 'required|string',
-            'password' => 'required|string',
-        ]);
-        if($validator->fails()){
-            return response()->json(['error' => $validator->errors()->all()]);
-        }
+    // private function loginByPhoneNumber(Request $request)
+    // {
+    //     // Validate the request data
+    //     $validator = Validator::make($request->all(), [
+    //         'phone_number' => 'required|string',
+    //         'password' => 'required|string',
+    //     ]);
+    //     if($validator->fails()){
+    //         return response()->json(['error' => $validator->errors()->all()]);
+    //     }
 
-        // Attempt to log in the VCard
-        if (Auth::guard('vcard')->attempt(['phone_number' => request('phone_number'), 'password' => request('password')])) {
-            config(['auth.guards.api.provider' => 'vcard']);
+    //     // Attempt to log in the VCard
+    //     if (Auth::guard('vcard')->attempt(['phone_number' => request('phone_number'), 'password' => request('password')])) {
+    //         config(['auth.guards.api.provider' => 'vcard']);
 
-            // $vCard = Auth::guard('web2')->user();
-            // $token = $vCard->createToken('auth_token');
-            $vcard = Vcard::find(auth()->guard('vcard')->user()->phone_number);
-            $success =  $vcard;
-            $success['token'] =  $vcard->createToken('auth_token')->accessToken; 
-            $cookie = cookie('laravel_token', $success['token'], 60, null, null, true, true);
-            return response()->json([
-                'vcard' => $vcard,
-                'access_token' => $success['token'],
-                'token_type' => 'Bearer',
-            ])->withCookie($cookie);
+    //         // $vCard = Auth::guard('web2')->user();
+    //         // $token = $vCard->createToken('auth_token');
+    //         $vcard = Vcard::find(auth()->guard('vcard')->user()->phone_number);
+    //         $success =  $vcard;
+    //         $success['token'] =  $vcard->createToken('auth_token')->accessToken; 
+    //         $cookie = cookie('laravel_token', $success['token'], 60, null, null, true, true);
+    //         return response()->json([
+    //             'vcard' => $vcard,
+    //             'access_token' => $success['token'],
+    //             'token_type' => 'Bearer',
+    //         ])->withCookie($cookie);
 
-            // return response()->json([
-            //     'vcard' => $vCard,
-            //     'access_token' => $token->accessToken,
-            //     'token_type' => 'Bearer',
-            // ]);
-        } else {
-            return response()->json(['message' => 'Invalid credentials'], 401);
-        }
-    }
+    //         // return response()->json([
+    //         //     'vcard' => $vCard,
+    //         //     'access_token' => $token->accessToken,
+    //         //     'token_type' => 'Bearer',
+    //         // ]);
+    //     } else {
+    //         return response()->json(['message' => 'Invalid credentials'], 401);
+    //     }
+    // }
 
-    private function loginByEmail(Request $request)
-    {
-        // Validate the request data
-        $validatedData = $request->validate([
-            'email' => 'required|string|email',
-            'password' => 'required|string',
-        ]);
+    // private function loginByEmail(Request $request)
+    // {
+    //     // Validate the request data
+    //     $validatedData = $request->validate([
+    //         'email' => 'required|string|email',
+    //         'password' => 'required|string',
+    //     ]);
 
-        // Attempt to log in the user
-        if (!Auth::attempt($validatedData)) {
-            return response()->json(['message' => 'Invalid credentials'], 401);
-        }
+    //     // Attempt to log in the user
+    //     if (!Auth::attempt($validatedData)) {
+    //         return response()->json(['message' => 'Invalid credentials'], 401);
+    //     }
 
-        // Get the authenticated user
-        $user = Auth::user();
+    //     // Get the authenticated user
+    //     $user = Auth::user();
 
-        // Issue a token for the user and retrieve the plain text token
-        $token = $user->createToken('auth_token');
+    //     // Issue a token for the user and retrieve the plain text token
+    //     $token = $user->createToken('auth_token');
 
-        // Return the token as a response
-        return response()->json([
-            'user' => $user,
-            'access_token' => $token->accessToken,
-            'token_type' => 'Bearer',
-        ]);
-    }
+    //     // Return the token as a response
+    //     return response()->json([
+    //         'user' => $user,
+    //         'access_token' => $token->accessToken,
+    //         'token_type' => 'Bearer',
+    //     ]);
+    // }
 
-    public function logout (Request $request) {
-        $token = $request->user()->token();
-        $token->revoke();
-        $response = ['message' => 'You have been successfully logged out!'];
-        return response($response, 200);
-    }
+    // public function logout (Request $request) {
+    //     $token = $request->user()->token();
+    //     $token->revoke();
+    //     $response = ['message' => 'You have been successfully logged out!'];
+    //     return response($response, 200);
+    // }
 }
