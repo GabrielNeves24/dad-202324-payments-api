@@ -8,6 +8,7 @@ use App\Models\VCard;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Category;
+use Carbon\Carbon;
 
 class VCardController extends Controller
 {
@@ -19,14 +20,14 @@ class VCardController extends Controller
     public function getAllVCards()
     {
         $vcards = VCard::all();
-        return response()->json(['vcards' => $vcards], 200);
+        return response()->json(['data' => $vcards], 200);
     }
 
     public function getVCardsbyphoneNumber($phone_number)
     {
         $vcard = VCard::findOrFail($phone_number);
-        return $vcard;
-        //return response()->json(['vcard' => $vcard], 200);
+        //return $vcard;
+        return response()->json(['data' => $vcard], 200);
     }
 
     public function getVCardImage($phone_number)
@@ -84,8 +85,25 @@ class VCardController extends Controller
         if($categories->isEmpty()){
             return response()->json(['message' => `VCard $phone_number não tem categorias`], 404);
         }
-        return response()->json(['categories' => $categories], 200);
+        return response()->json(['data' => $categories], 200);
     }
+
+    public function getLast30DaysTransactions($phone_number)
+{
+    $startDate = Carbon::now()->subDays(30);
+    $endDate = Carbon::now();
+
+    $transactions = Transaction::where('vcard', $phone_number)
+                                ->whereBetween('date', [$startDate, $endDate])
+                                ->orderBy('date', 'asc')
+                                ->get();
+
+    if($transactions->isEmpty()){
+        return response()->json(['message' => "No transactions found for the last 30 days for vCard $phone_number"], 404);
+    }
+
+    return response()->json(['data' => $transactions], 200);
+}
 
     public function getCategoriesbyphoneNumberDebit($phone_number)
     {
@@ -95,7 +113,7 @@ class VCardController extends Controller
         if($categories->isEmpty()){
             return response()->json(['message' => `VCard $phone_number não tem categorias`], 404);
         }
-        return response()->json(['categories' => $categories], 200);
+        return response()->json(['data' => $categories], 200);
     }
 
     public function getCategoriesbyphoneNumberCredit($phone_number)
@@ -106,7 +124,7 @@ class VCardController extends Controller
         if($categories->isEmpty()){
             return response()->json(['message' => `VCard $phone_number não tem categorias`], 404);
         }
-        return response()->json(['categories' => $categories], 200);
+        return response()->json(['data' => $categories], 200);
     }
 
     public function getTransactionsbyphoneNumber($phone_number)
@@ -117,7 +135,7 @@ class VCardController extends Controller
         if($transactions->isEmpty()){
             return response()->json(['message' => `VCard $phone_number não tem transações`], 404);
         }
-        return response()->json(['transactions' => $transactions], 200);
+        return response()->json(['data' => $transactions], 200);
     }
 
     public function updateConfirmationCode(Request $request, $phone_number)
@@ -246,6 +264,25 @@ class VCardController extends Controller
             'max_debit' => $request->max_debit,
             'blocked' => $request->blocked,
         ]);
-        return response()->json(['message' => `VCard $teste atualizado com sucesso`], 200);
+        return response()->json(['data' => `VCard $teste atualizado com sucesso`], 200);
+    }
+
+
+    public function deleteCategorybyphoneNumber(Request $request, $id){
+        // Validate the incoming request data
+        // $validatedData = $request->validate([
+        //     'id' => 'required|integer', // Add any validation rules you need
+        // ]);
+        $id = $request->id;
+        $category = Category::findOrFail($id);
+        //if category has alreay bem used in transactions, do soft delete only else delete
+        if(Transaction::where('category_id', $id)->exists()){
+            //delete only at delete_at i dont have updated_at
+            $category->delete();
+            return response()->json(['message' => `Categoria $id eliminada (Soft) com sucesso`], 200);
+        }else{
+            $category->forceDelete();
+            return response()->json(['message' => `Categoria $id eliminada permanentemente com sucesso`], 200);
+        }
     }
 }

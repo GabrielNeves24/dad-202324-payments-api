@@ -20,7 +20,7 @@ class UserController extends Controller
     {
         $users = User::all();
         //return User::all();//response()->json(['users' => $users], 200);
-        return response()->json(['users' => $users], 200);
+        return response()->json(['data' => $users], 200);
     }
     
     public function getUserById($id)

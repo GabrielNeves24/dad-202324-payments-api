@@ -101,11 +101,12 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        if ($request->has('phone_number')) {
-            return $this->registerCliente($request);
-        } else {
-            return $this->registerUser($request);
-        }
+        return $this->registerCliente($request);
+        // if ($request->has('phone_number')) {
+        //     return $this->registerCliente($request);
+        // } else {
+        //     return $this->registerUser($request);
+        // }
     }
 
     public function registerUser(Request $request)
@@ -151,41 +152,45 @@ class AuthController extends Controller
             'password' => 'required|string|min:8',
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'photo' => 'nullable|image|max:2048',
+            'profileImage' => 'nullable|image',
             'confirmation_code' => 'required|digits:4',
         ]);
         //verificar se não existe um user com o mesmo PHONE_NUMBER
-        
-        // Create a new VCard for the user
-        $vCard = Vcard::create([
-            'phone_number' => $validatedData['phone_number'],
-            'name' => $validatedData['name'],
-            'email' => $validatedData['email'],
-            'photo_url' => 'image|mimes:jpeg,jpg|max:4096',
-            'password' => bcrypt($validatedData['password']),
-            'confirmation_code' => bcrypt($validatedData['confirmation_code']),
-            'blocked' => 0,
-            'balance' => 0,
-            'max_debit' => 5000,
-        ]);
-
-        // Upload the photo if it exists
-        if ($request->hasFile('photo_url')) {
-            $picture = $request->file('photo_url');
-            $picturePath = $picture->store('fotos', 'public'); // Store in the public storage
-            // Save the image URL in the database
-            $vCard->photo_url = url('storage/' . $picturePath);
+        try{
+            $vCard = Vcard::create([
+                'phone_number' => $validatedData['phone_number'],
+                'name' => $validatedData['name'],
+                'email' => $validatedData['email'],
+                'photo_url' => 'image|mimes:jpeg,jpg|max:4096',
+                'password' => bcrypt($validatedData['password']),
+                'confirmation_code' => bcrypt($validatedData['confirmation_code']),
+                'blocked' => 0,
+                'balance' => 0,
+                'max_debit' => 5000,
+            ]);
+    
+            // Upload the photo if it exists
+            if ($request->hasFile('photo_url')) {
+                $picture = $request->file('photo_url');
+                $picturePath = $picture->store('fotos', 'public'); // Store in the public storage
+                // Save the image URL in the database
+                $vCard->photo_url = url($picturePath);
+            }
+    
+            // Issue a token for the user
+            //$token = $vCard->createToken('auth_token')->accessToken;
+            $vCard->save();
+            // Retunr the data to my Vue3 axios 
+            return response()->json([
+                'vCard' => $vCard,
+                //'token_type' => 'Bearer',
+            ]);
         }
-
-        // Issue a token for the user
-        $token = $vCard->createToken('auth_token')->accessToken;
-        $vCard->save();
-        // Retunr the data to my Vue3 axios 
-        return response()->json([
-            'vCard' => $vCard,
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-        ]);
+        catch(Exception $e){
+            return response()->json(['error' => 'Erro ao criar o VCard'], 401);
+        }
+        // Create a new VCard for the user
+        
     }
         
     // public function login(Request $request)
