@@ -41,13 +41,16 @@ Route::middleware('auth:api')->group(function () {
     Route::get('users/me', [UserController::class, 'show_me']);
     Route::get('vcards/{phone_number}/transactions/all', [VCardController::class, 'getTransactionsbyphoneNumber']);
     Route::post('transactions/debit', [TransactionController::class, 'store']);
+    Route::post('transactions/credit', [TransactionController::class, 'storeCredit']);
     Route::post('logout' , [AuthController::class, 'logout']);
     Route::get('vcards/{phone_number}/categories', [VCardController::class, 'getCategoriesbyphoneNumber']);
     Route::delete('vcards/{phone_number}/categories/{id}', [VCardController::class, 'deleteCategorybyphoneNumber']);
     //Route::get('vcards/{phone_number}/categories', [VCardController::class, 'getCategoriesbyphoneNumber']);
     Route::get('vcards/{phone_number}/categories/debit', [VCardController::class, 'getCategoriesbyphoneNumberCredit']);
     Route::get('vcards/{phone_number}/categories/credit', [VCardController::class, 'getCategoriesbyphoneNumberDebit']);
-    Route::put('vcards/{phone_number}', [VCardController::class, 'updateVCard']);
+    
+    
+
     Route::get('vcards/{phone_number}', [VCardController::class, 'getVCardsbyphoneNumber']);
     Route::get('/vcards/{phone_number}/transactions/last30days', [VCardController::class, 'getLast30DaysTransactions']);
     Route::post('vcards/{phone_number}/categories', [CategoryController::class, 'addCategoryByPhoneNumber']);
@@ -60,8 +63,14 @@ Route::middleware('auth:api')->group(function () {
     Route::get('users/{id}', [UserController::class, 'getUser']);
     Route::get('vcards', [VCardController::class, 'getAllVCards']);
     //Route::get('vcards/{phone_number}', [VCardController::class, 'getVCardsbyphoneNumber']);
-    Route::delete('vcards/{phone_number}', [VCardController::class, 'deleteVCard']);
+    Route::get('transactions', [TransactionController::class, 'getAllTransactions']);
+    Route::put('users/{id}', [UserController::class, 'update']);
+    //update info on Vcard
+    Route::put('vcards/{phone_number}', [VCardController::class, 'updateVCard']);
+    //update info on vcards about max_debit and block
     Route::put('vcards/user/{phone_number}', [VCardController::class, 'updateVCardUser']);
+    //delete vcard
+    Route::delete('vcards/{phone_number}', [VCardController::class, 'deleteVCard']);
 
 });
 Route::get('vcards/{phone_number}/foto', [VCardController::class, 'getVCardImage']);
@@ -74,7 +83,7 @@ Route::middleware('auth:vcard-api')->group(function () {
     
     //Route::get('vcards/{phone_number}/transactions/all', [VCardController::class, 'getTransactionsbyphoneNumber']);
     //Route::post('transactions/debit', [TransactionController::class, 'store']);
-    Route::post('verify-password', [UserController::class, 'verifyPassword']);
+    //Route::post('verify-password', [UserController::class, 'verifyPassword']);
     
 });
 

@@ -221,7 +221,7 @@ class VCardController extends Controller
         }
         //caso exista, deleta, caso esteja com saldo a 0 e sem dados de transações associados force delte
         if(VCard::where('phone_number', $phone_number)->value('balance') == 0){
-            if (!Transaction::where('phone_number', $phone_number)->exists()){
+            if (!Transaction::where('vcard', $phone_number)->exists()){
                 VCard::where('phone_number', $phone_number)->forceDelete();
                 return response()->json(['message' => `VCard $nome eliminado permanentemente com sucesso`], 200);
             }
@@ -235,8 +235,10 @@ class VCardController extends Controller
     public function updateVCard(Request $request, $phone_number){
         // Validate the incoming request data
         $validatedData = $request->validate([
-            'name' => 'required|string', // Add any validation rules you need
-            'email' => 'required|email',  // Add any validation rules you need
+            'name' => 'sometimes|required|string',
+            'email' => 'sometimes|required|email',
+            'password' => 'nullable|string', // Changed to nullable
+            'confirmation_code' => 'nullable|integer|digits:4',
         ]);
 
         // Check if the VCard with the provided phone number exists
@@ -246,11 +248,25 @@ class VCardController extends Controller
             return response()->json(['message' => "VCard $phone_number não encontrado"], 404);
         }
 
-        // Update the VCard with the validated data
-        $vcard->update($validatedData);
+        // Update only if fields are present and not empty
+        if ($request->filled('name')) {
+            $vcard->name = $validatedData['name'];
+        }
+        if ($request->filled('email')) {
+            $vcard->email = $validatedData['email'];
+        }
+        if ($request->filled('password')) {
+            $vcard->password = Hash::make($validatedData['password']);
+        }
+        if ($request->filled('confirmation_code')) {
+            $vcard->confirmation_code = $validatedData['confirmation_code'];
+        }
+
+        $vcard->save();
 
         return response()->json(['message' => "VCard $phone_number atualizado com sucesso"], 200);
     }
+
 
     public function updateVCardUser(Request $request, $phone_number){
         //caso o vcard não exista, retorna erro

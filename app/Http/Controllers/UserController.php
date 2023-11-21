@@ -26,33 +26,34 @@ class UserController extends Controller
     public function getUserById($id)
     {
         $user = User::findOrFail($id);
-        return response()->json(['user' => $user], 200);
+        return response()->json(['data' => $user], 200);
     }
 
     public function getUser($id)
     {
         $user = User::findOrFail($id);
-        return response()->json(['user' => $user], 200);
+        return response()->json(['data' => $user], 200);
     }
 
     public function verifyPassword(Request $request)
     {
-        $enteredPassword = $request->input('enteredpassword');
+        $enteredPassword = $request->input('enteredPassword');
         $userType = $request->input('userType');
         $id = $request->input('user');
-        if ($userType == 'user') {
+
+        if ($userType == 'A') {
             $user = User::where('id', $id)->first();
         } else {
             $user = VCard::where('phone_number', $id)->first();
         }
 
         // Compare the entered password with the stored hashed password
-        if (Hash::check($enteredPassword, $user->password)) {
+        if ($user && Hash::check($enteredPassword, $user->password)) {
             // Password is correct
-            return response()->json(['message' => 'Password is correct'], 200);
+            return response()->json(['isValid' => true], 200);
         } else {
             // Password is incorrect
-            return response()->json(['message' => 'Password is incorrect'], 400);
+            return response()->json(['isValid' => false], 400);
         }
 
     }
@@ -113,22 +114,35 @@ class UserController extends Controller
         $user = User::findOrFail($id);
 
         // Validate the request
-        $this->validate($request, [
-            'name' => 'string',
-            'email' => 'email|unique:users,email,' . $user->id,
-            // Add validation for custom_options and custom_data if needed
+        $validatedData = $request->validate([
+            'name' => 'sometimes|required|string',
+            'email' => 'sometimes|required|email|unique:users,email,' . $id,
+            'password' => 'nullable|string',
         ]);
 
-        // Update the user
-        $user->update([
-            'name' => $request->name,
-            'email' => $request->email,
-            'custom_options' => $request->custom_options,
-            'custom_data' => $request->custom_data,
-        ]);
+        // Construct the update data array
+        $updateData = [];
+        if ($request->filled('name')) {
+            $updateData['name'] = $validatedData['name'];
+        }
 
-        return response()->json(['user' => $user], 200);
+        if ($request->filled('email')) {
+            $updateData['email'] = $validatedData['email'];
+        }
+
+        if ($request->filled('password')) {
+            $updateData['password'] = bcrypt($validatedData['password']);
+        }
+
+        // Perform the update using a raw SQL query or Query Builder
+        if (!empty($updateData)) {
+            \DB::table('users')->where('id', $id)->update($updateData);
+        }
+
+        return response()->json(['message' => "User {$user->name} updated successfully"], 200);
     }
+
+
 
     public function destroy($id)
     {
@@ -140,4 +154,6 @@ class UserController extends Controller
 
         return response()->json(['message' => 'User deleted successfully'], 200);
     }
+
+
 }

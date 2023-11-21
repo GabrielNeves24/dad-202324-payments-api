@@ -152,6 +152,69 @@ class TransactionController extends Controller
         return response()->json(['error' => 'An unexpected error occurred'], 500);
     }
 
+
+
+
+
+    public function storeCredit(Request $request) : JsonResponse
+    {
+      
+        // if ($request['payment_type'] == 'VCARD' ) {
+            //now in this case is the same as the debit transaction but i will recevied one more filed the A vCard payment type means that the payment is relative
+            //to a transfer between 2 vCards and 2 transactions (paired transactions) are created – a debit
+            //transaction on the source vCard (the vCard where the payment is created) and a credit transaction
+            //on the destination vCard. vCard payments are handled exclusively by the vCard platform
+            $request->validate([
+                'vcard' => 'required|max:9',
+                'value' => 'required|numeric|min:0.01',
+                'payment_type' => 'required',
+                'payment_reference' => 'required|max:9',
+                'category_id' => 'nullable',
+                'description' => 'nullable|string|max:255',
+                // Add any other validation rules for custom_options and custom_data
+            ]);
+
+            $vCardOrigem = VCard::where('phone_number', $request['vcard'])->first();
+            if (!$vCardOrigem) {
+                return response()->json(['error' => 'VCard not found'], 404);
+            }
+            try {
+                $old_balance = $vCardOrigem->balance;
+                $new_balance = $old_balance + $request['value'];
+
+                // Create a transaction record
+                $transactionOrigem = new Transaction([
+                    'vcard' => $vCardOrigem->phone_number,
+                    'type' => 'C',
+                    'value' => $request['value'],
+                    'old_balance' => $old_balance,
+                    'new_balance' => $new_balance,
+                    'payment_type' => $request['payment_type'],
+                    'payment_reference' => $request['payment_reference'],
+                    'description' => $request['description'],
+                    'date' => now()->toDateString(),
+                    'datetime' => now(),
+                    // Set other transaction data accordingly
+                ]);
+                $transactionOrigem->save(); // Save the debit transaction
+                //update value of balance vcard
+                $vCardOrigem->balance += $request['value'];
+                $vCardOrigem->save();
+                return response()->json([
+                    'message' => 'Transação Credito criada com sucesso',
+                ], 201);
+            }catch (\Exception $e) {
+                // Handle any exceptions and return an error response
+                return response()->json(['error' => 'An error occurred while creating the transaction', 'details' => $e->getMessage()], 500);
+            }
+        //}
+        return response()->json(['error' => 'An unexpected error occurred'], 500);
+    }
+
+
+
+
+
     // /**
     //  * Create a debit transaction for a vCard.
     //  *
@@ -241,6 +304,14 @@ class TransactionController extends Controller
         $transaction = Transaction::all()->where('vcard', $phone_number);
         return $transaction;
         //return response()->json(['transaction' => $transaction], 200);
+        //return response()->json(['vcard' => $vcard], 200);
+    }
+
+    public function getAllTransactions()
+    {
+        $transaction = Transaction::all();
+        //return $transaction;
+        return response()->json(['data' => $transaction], 200);
         //return response()->json(['vcard' => $vcard], 200);
     }
 }
