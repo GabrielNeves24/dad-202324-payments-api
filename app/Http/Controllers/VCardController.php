@@ -239,6 +239,7 @@ class VCardController extends Controller
             'email' => 'sometimes|required|email',
             'password' => 'nullable|string', // Changed to nullable
             'confirmation_code' => 'nullable|integer|digits:4',
+            'photo_url' => 'nullable|image',
         ]);
 
         // Check if the VCard with the provided phone number exists
@@ -260,6 +261,14 @@ class VCardController extends Controller
         }
         if ($request->filled('confirmation_code')) {
             $vcard->confirmation_code = $validatedData['confirmation_code'];
+        }
+        if ($request->hasFile('photo_url')) {
+            $randomString = Str::random(6); // Using Laravel's Str::random for generating random string
+            $file = $request->file('photo_url');
+            $filename = $validatedData['phone_number'] . '_' . $randomString . '.' . $file->getClientOriginalExtension();
+            $file->storeAs('fotos', $filename, 'public');
+            $vCard->photo_url = $filename;
+            //$vCard->save();
         }
 
         $vcard->save();

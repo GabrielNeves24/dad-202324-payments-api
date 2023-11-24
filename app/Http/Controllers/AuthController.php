@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
+
 
 
 
@@ -152,34 +154,39 @@ class AuthController extends Controller
             'password' => 'required|string|min:8',
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'profileImage' => 'nullable|image',
+            'photo_url' => 'nullable|file|mimes:jpg,jpeg,png|max:4096',
             'confirmation_code' => 'required|digits:4',
         ]);
         //verificar se não existe um user com o mesmo PHONE_NUMBER
         try{
+            
+            
+            // Upload the photo if it exists
+            if ($request->hasFile('photo_url')) {
+                $randomString = Str::random(6); // Using Laravel's Str::random for generating random string
+                $file = $request->file('photo_url');
+                $filename = $validatedData['phone_number'] . '_' . $randomString . '.' . $file->getClientOriginalExtension();
+                $file->storeAs('fotos', $filename, 'public');
+                //$vCard->photo_url = $filename;
+                //$vCard->save();
+            }else{
+                $filename = 'default.png';
+                
+            }
+            
             $vCard = Vcard::create([
                 'phone_number' => $validatedData['phone_number'],
                 'name' => $validatedData['name'],
                 'email' => $validatedData['email'],
-                'photo_url' => 'image|mimes:jpeg,jpg|max:4096',
                 'password' => bcrypt($validatedData['password']),
                 'confirmation_code' => bcrypt($validatedData['confirmation_code']),
                 'blocked' => 0,
                 'balance' => 0,
                 'max_debit' => 5000,
+                'photo_url' => $filename,
             ]);
-    
-            // Upload the photo if it exists
-            if ($request->hasFile('photo_url')) {
-                $picture = $request->file('photo_url');
-                $picturePath = $picture->store('fotos', 'public'); // Store in the public storage
-                // Save the image URL in the database
-                $vCard->photo_url = url($picturePath);
-            }
-    
-            // Issue a token for the user
-            //$token = $vCard->createToken('auth_token')->accessToken;
             $vCard->save();
+            
             // Retunr the data to my Vue3 axios 
             return response()->json([
                 'vCard' => $vCard,
