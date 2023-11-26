@@ -11,6 +11,7 @@ use App\Models\Category;
 use App\Models\DefaultCategory;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Validator;
 
 class VCardController extends Controller
 {
@@ -54,41 +55,74 @@ class VCardController extends Controller
         }
     }
 
-    public function updateProfile(Request $request, $phone_number)
+    public function update($phone_number, Request $request)
     {
-        $vcard = VCard::findOrFail($phone_number);
+        if($request->filled('name') && $request->filled('email')){
+            $vcard = VCard::findOrFail($phone_number);
+            // Validate the request
+            $this->validate($request, [
+                'name' => 'string',
+                'email' => 'email|unique:users,email,' . $vcard->id,
+            ]);
 
-        // Validate the request
-        $this->validate($request, [
-            'name' => 'string',
-            'email' => 'email|unique:users,email,' . $vcard->id,
-            'password' => 'required',
-        ]);
+            // Update the user
+            $vcard->update([
+                'name' => $request->name,
+                'email' => $request->email,
+            ]);
 
-        // Check if the password is correct
-        if (!Auth::attempt(['email' => $vcard->email, 'password' => $request->password])) {
-            return response()->json(['error' => 'Invalid password'], 401);
+            return response()->json(['vcard' => $vcard], 200);
+        }else 
+        if($request->filled('password')){
+            // Validate the request
+            $validated = Validator::make($request->all(), [
+                'password' => 'required|string|min:6',
+                'confirmation_code' => 'required|integer|digits:4',
+            ])->validate();
+
+            // Find the VCard
+            $vcard = VCard::find($phone_number);
+            if (!$vcard) {
+                return response()->json(['error' => 'VCard not found'], 404);
+            }
+
+            // Update the VCard
+            $vcard->password = Hash::make($validated['password']);
+            $vcard->confirmation_code = Hash::make($validated['confirmation_code']);
+            $vcard->save();
+
+            return response()->json(['message' => 'VCard password updated successfully'], 200);
+        }else{
+            return response()->json(['message' => 'VCard not updated'], 404);
         }
-
-        // Update the user
-        $vcard->update([
-            'name' => $request->name,
-            'email' => $request->email,
-        ]);
-
-        return response()->json(['vcard' => $vcard], 200);
     }
 
-    public function getCategoriesbyphoneNumber($phone_number)
-    {
-        //$vcard = VCard::findOrFail($phone_number);
-        $categories = Category::where('vcard', $phone_number)->get();
-        //caso vazia sem categorias
-        if($categories->isEmpty()){
-            return response()->json(['message' => `VCard $phone_number não tem categorias`], 404);
-        }
-        return response()->json(['data' => $categories], 200);
-    }
+    // public function updateProfile(Request $request, $phone_number)
+    // {
+    //     $vcard = VCard::findOrFail($phone_number);
+
+    //     // Validate the request
+    //     $this->validate($request, [
+    //         'name' => 'string',
+    //         'email' => 'email|unique:users,email,' . $vcard->id,
+    //         'password' => 'required',
+    //     ]);
+
+    //     // Check if the password is correct
+    //     if (!Auth::attempt(['email' => $vcard->email, 'password' => $request->password])) {
+    //         return response()->json(['error' => 'Invalid password'], 401);
+    //     }
+
+    //     // Update the user
+    //     $vcard->update([
+    //         'name' => $request->name,
+    //         'email' => $request->email,
+    //     ]);
+
+    //     return response()->json(['vcard' => $vcard], 200);
+    // }
+
+    
 
     public function getLast30DaysTransactions($phone_number)
 {
@@ -163,28 +197,28 @@ class VCardController extends Controller
         return response()->json(['vcard' => $vcard], 200);
     }
 
-    public function updatePassword(Request $request, $phone_number)
-    {
-        $vcard = VCard::findOrFail($phone_number);
+    // public function updatePassword(Request $request, $phone_number)
+    // {
+    //     $vcard = VCard::findOrFail($phone_number);
 
-        // Validate the request
-        $this->validate($request, [
-            'current_password' => 'required',
-            'new_password' => 'required|confirmed',
-        ]);
+    //     // Validate the request
+    //     $this->validate($request, [
+    //         'current_password' => 'required',
+    //         'new_password' => 'required|confirmed',
+    //     ]);
 
-        // Check if the current password is correct
-        if (!Auth::attempt(['email' => $vcard->email, 'password' => $request->current_password])) {
-            return response()->json(['error' => 'Invalid password'], 401);
-        }
+    //     // Check if the current password is correct
+    //     if (!Auth::attempt(['email' => $vcard->email, 'password' => $request->current_password])) {
+    //         return response()->json(['error' => 'Invalid password'], 401);
+    //     }
 
-        // Update the password
-        $vcard->update([
-            'password' => bcrypt($request->new_password),
-        ]);
+    //     // Update the password
+    //     $vcard->update([
+    //         'password' => bcrypt($request->new_password),
+    //     ]);
 
-        return response()->json(['vcard' => $vcard], 200);
-    }
+    //     return response()->json(['vcard' => $vcard], 200);
+    // }
 
     public function updatePhoto(Request $request, $phone_number)
     {
@@ -234,33 +268,42 @@ class VCardController extends Controller
         return response()->json(['message' => `VCard $nome eliminado (Soft) com sucesso`], 200);
     }
 
-    public function updateVCard(Request $request, $phone_number){
+    public function updateVCard(Request $request, $id){
+        dd($request);
         // Validate the incoming request data
-        $validatedData = $request->validate([
-            'name' => 'sometimes|required|string',
-            'email' => 'sometimes|required|email',
+        $validator = Validator::make($request->all(), [
+            'id' => 'integer',
+            'name' => 'string|max:255',
+            'email' => 'email|unique:vcards,email,' . $id,
             'photo_url' => 'nullable|image',
         ]);
-
+        
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 400);
+        }
+        $dataValidated = $validator->validated();
+        
         // Check if the VCard with the provided phone number exists
-        $vcard = VCard::where('phone_number', $phone_number)->first();
+        $vcard = VCard::where('phone_number', $id)->first();
 
         if (!$vcard) {
-            return response()->json(['message' => "VCard $phone_number não encontrado"], 404);
-        }
+            return response()->json(['message' => "VCard $id não encontrado"], 404);
 
+        }
         // Update only if fields are present and not empty
         if ($request->filled('name')) {
-            $vcard->name = $validatedData['name'];
+            $vcard->name = $dataValidated['name'];
+
         }
         if ($request->filled('email')) {
-            $vcard->email = $validatedData['email'];
+            $vcard->email = $dataValidated['email'];
         }
+
 
         if ($request->hasFile('photo_url')) {
             $randomString = Str::random(6); // Using Laravel's Str::random for generating random string
             $file = $request->file('photo_url');
-            $filename = $validatedData['phone_number'] . '_' . $randomString . '.' . $file->getClientOriginalExtension();
+            $filename = $vcard->phone_number . '_' . $randomString . '.' . $file->getClientOriginalExtension();
             $file->storeAs('fotos', $filename, 'public');
             $vcard->photo_url = $filename;
             //$vCard->save();
@@ -268,7 +311,7 @@ class VCardController extends Controller
 
         $vcard->save();
 
-        return response()->json(['message' => "VCard $phone_number atualizado com sucesso"], 200);
+        return response()->json(['message' => "VCard $id atualizado com sucesso"], 200);
     }
 
 
@@ -317,40 +360,9 @@ class VCardController extends Controller
         return response()->json(['data' => $category], 200);
     }
 
-    public function updateCategoryById(Request $request){
-        // Validate the incoming request data
-        $validatedData = $request->validate([
-            'id' => 'required|integer', // Add any validation rules you need
-            'name' => 'sometimes|required|string',
-            'type' => 'sometimes|required|string',
-            'vcard' => 'sometimes|required|string',
-        ]);
-        $phone_number= $request->vcard;
-        $id = $request->id;
-        // Check if the VCard with the provided phone number exists
-        $category = Category::where('vcard', $phone_number)->where('id', $id)->first();
+    
 
-        if (!$category) {
-            return response()->json(['message' => "Categoria $id não encontrada"], 404);
-        }
-
-        // Update only if fields are present and not empty
-        if ($request->filled('name')) {
-            $category->name = $validatedData['name'];
-        }
-        if ($request->filled('type')) {
-            $category->type = $validatedData['type'];
-        }
-        if ($request->filled('vcard')) {
-            $category->vcard = $validatedData['vcard'];
-        }
-
-        $category->save();
-
-        return response()->json(['message' => "Categoria $id atualizada com sucesso"], 200);
-    }
-
-    public function updatePasswordVCard(Request $request){
+    public function updatePasswordVCard(Request $request, $id){
         // Validate the incoming request data
         $validatedData = $request->validate([
             'id' => 'required|integer', 

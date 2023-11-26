@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\DB;
+use App\Models\RealUser;
+use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
@@ -59,7 +61,7 @@ class UserController extends Controller
 
     }
 
-    public function createUser(Request $request)
+    public function create(Request $request)
     {
         // Validate the request data
         $validatedData = $request->validate([
@@ -73,7 +75,7 @@ class UserController extends Controller
         }
 
         // Create the user
-         $user = User::create([
+         $user = RealUser::create([
              'password' => bcrypt($validatedData['password']),
              'name' => $validatedData['name'],
              'email' => $validatedData['email'],
@@ -111,60 +113,74 @@ class UserController extends Controller
 
     public function update(Request $request)
     {
-        // Validate the request
-        $validatedData = $request->validate([
-            'id' => 'integer|required',
-            'name' => 'string',
-            'email' => 'email|unique:users',
-        ]);
-        $id = $request->id;
-        // Find the user
-        $user = User::findOrFail($id);
+        if($request->filled('name') && $request->filled('email')){
+            $validator = Validator::make($request->all(), [
+                'id' => 'required|integer',
+                'name' => 'string|max:255',
+                'email' => 'string|email|max:255|unique:users',
+            ]);
+            if ($validator->fails()) {
+                return response()->json($validator->errors(), 400);
+            }
+            // Find the user
+            $user = RealUser::find($request->id);
+            if (!$user) {
+                return response()->json(['error' => 'User not found'], 404);
+            }
+            // Update user
+            $user->name = $request->name;
+            $user->email = $request->email;
+            $user->save();
 
-        // Construct the update data array
-        $updateData = [];
-        if ($request->filled('name')) {
-            $updateData['name'] = $validatedData['name'];
+            return response()->json(['message' => 'User updated successfully']);
+        }else{
+            if ($request->filled('password')){
+                $validator = Validator::make($request->all(), [
+                    'id' => 'required|integer',
+                    'password' => 'required|string|min:6',
+                ]);
+                if ($validator->fails()) {
+                    return response()->json($validator->errors(), 400);
+                }
+                // Find the user
+                $user = RealUser::find($request->id);
+                if (!$user) {
+                    return response()->json(['error' => 'User not found'], 404);
+                }
+                // Update user
+                $user->password = Hash::make($request->password);
+                $user->save();
+        
+                return response()->json(['message' => 'Password updated successfully']);
+            }else{
+                return response()->json(['error' => 'Name or Email or Password not found'], 404);
+            }
         }
-
-        if ($request->filled('email')) {
-            $updateData['email'] = $validatedData['email'];
-        }
-
-        // Perform the update using a raw SQL query or Query Builder
-        if (!empty($updateData)) {
-            DB::table('users')->where('id', $id)->update($updateData);
-        }
-
-        return response()->json(['message' => "User {$user->name} updated successfully"], 200);
     }
 
     public function updatePassword(Request $request, $id)
     {
-        // Find the user
-        $user = User::findOrFail($id);
-
-        // Validate the request
-        $validatedData = $request->validate([
-            'id' => 'integer|required',
-            'confirmation_code' => 'number|digits:4',
-            'password' => 'string',
+            // Validate the request data
+        $validator = Validator::make($request->all(), [
+            'password' => 'required|string|min:3',
         ]);
-
-        if ($request->filled('password')) {
-            $updateData['password'] = bcrypt($validatedData['password']);
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 400);
         }
 
-        if ($request->filled('confirmation_code')) {
-            $updateData['confirmation_code'] = $validatedData['confirmation_code'];
+        // Find the user
+        $user = RealUser::find($id);
+        
+
+        if (!$user) {
+            return response()->json(['error' => 'User not found'], 404);
         }
 
-        // Perform the update using a raw SQL query or Query Builder
-        if (!empty($updateData)) {
-            DB::table('users')->where('id', $id)->update($updateData);
-        }
+        // Update user password
+        $user->password = Hash::make($request->password);
+        $user->save();
 
-        return response()->json(['message' => "User {$user->name} updated successfully"], 200);
+        return response()->json(['message' => 'Password updated successfully']);
     }
 
 

@@ -44,8 +44,8 @@ Route::middleware('auth:api')->group(function () {
 
     //categorias
     Route::get('vcards/categories', [CategoryController::class, 'getAllCategories']);
-    Route::get('vcards/{phone_number}/categories', [VCardController::class, 'getCategoriesbyphoneNumber']);
-    Route::put('vcards/{phone_number}/categories', [VCardController::class, 'updateCategoryById']);
+    Route::get('vcards/{phone_number}/categories', [CategoryController::class, 'getCategoriesbyphoneNumber']);
+    Route::put('vcards/{phone_number}/categories', [CategoryController::class, 'updateCategoryById']);
     Route::get('vcards/{phone_number}/categories/debit', [VCardController::class, 'getCategoriesbyphoneNumberCredit']);
     Route::get('vcards/{phone_number}/categories/credit', [VCardController::class, 'getCategoriesbyphoneNumberDebit']);
     Route::get('vcards/{phone_number}/categories/{id}', [VCardController::class, 'getCategorybyphoneNumberAndId']);
@@ -61,7 +61,7 @@ Route::middleware('auth:api')->group(function () {
     Route::delete('categories/defaults/{id}', [DefaultCategoryController::class, 'deleteCategoriesDefault']);
     
     //transactions
-    Route::get('/vcards/{phone_number}/transactions/last30days', [VCardController::class, 'getLast30DaysTransactions']);
+    Route::get('vcards/{phone_number}/transactions/last30days', [VCardController::class, 'getLast30DaysTransactions']);
     Route::post('transactions/debit', [TransactionController::class, 'store']);
     Route::post('transactions/credit', [TransactionController::class, 'storeCredit']);
     Route::get('transactions/{id}', [TransactionController::class, 'GetTransactionById']);
@@ -72,7 +72,7 @@ Route::middleware('auth:api')->group(function () {
     // Routes for regular users protected by the 'api' guard
     Route::get('users', [UserController::class, 'getAllUsers']);
     Route::post('verify-password', [UserController::class, 'verifyPassword']);
-    Route::post('users', [UserController::class, 'createUser']);
+    Route::post('users', [UserController::class, 'create']);
     //get user logon
     Route::get('users/{id}', [UserController::class, 'getUser']);
     Route::get('vcards', [VCardController::class, 'getAllVCards']);
@@ -82,8 +82,9 @@ Route::middleware('auth:api')->group(function () {
 
 
     //update info on Vcard
-    Route::put('vcards/perfil/{phone_number}', [VCardController::class, 'updateVCard']);
-    Route::put('vcards/password/{phone_number}', [VCardController::class, 'updatePasswordVCard']);
+    //Route::put('vcards/perfil/{id}', [VCardController::class, 'updateVCard']);
+    Route::put('vcards/{phone_number}', [VCardController::class, 'update']);
+    //Route::put('vcards/password/{id}', [VCardController::class, 'updatePasswordVCard']);
     Route::put('users/perfil/{id}', [UserController::class, 'update']);
     Route::put('users/password/{id}', [UserController::class, 'updatePassword']);
 

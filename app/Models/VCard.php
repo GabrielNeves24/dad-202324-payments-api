@@ -7,11 +7,11 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Passport\HasApiTokens;
+
 
 class VCard extends Model
 {
-    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
+    use HasFactory, Notifiable, SoftDeletes;
     //usar a tabela vcards
     protected $table = 'vcards';
     //id da tabela é phone_number

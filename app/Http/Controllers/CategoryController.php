@@ -43,12 +43,56 @@ class CategoryController extends Controller
                     'vcard' => 'max:255',
                 ]);
                 $category = Category::create($validateData);
-                return response()->json(['message' => 'Category created', 'category' => $category], 201);
+                return response()->json(['message' => 'Category created', 'data' => $category], 201);
             }catch(\Exception $e) {
                 return response()->json(['message' => 'Error creating category: ' . $e->getMessage()], 409);
             }
 
         }
+    }
+
+    public function updateCategoryById(Request $request){
+        // Validate the incoming request data
+        $validatedData = $request->validate([
+            'id' => 'required|integer', // Add any validation rules you need
+            'name' => 'sometimes|required|string',
+            'type' => 'sometimes|required|string',
+            'vcard' => 'sometimes|required|string',
+        ]);
+        $phone_number= $request->vcard;
+        $id = $request->id;
+        // Check if the VCard with the provided phone number exists
+        $category = Category::where('vcard', $phone_number)->where('id', $id)->first();
+
+        if (!$category) {
+            return response()->json(['message' => "Categoria $id não encontrada"], 404);
+        }
+
+        // Update only if fields are present and not empty
+        if ($request->filled('name')) {
+            $category->name = $validatedData['name'];
+        }
+        if ($request->filled('type')) {
+            $category->type = $validatedData['type'];
+        }
+        if ($request->filled('vcard')) {
+            $category->vcard = $validatedData['vcard'];
+        }
+
+        $category->save();
+
+        return response()->json(['message' => "Categoria $id atualizada com sucesso", 'data' => $category], 200);
+    }
+
+    public function getCategoriesbyphoneNumber($phone_number)
+    {
+        //$vcard = VCard::findOrFail($phone_number);
+        $categories = Category::where('vcard', $phone_number)->get();
+        //caso vazia sem categorias
+        if($categories->isEmpty()){
+            return response()->json(['message' => `VCard $phone_number não tem categorias`], 404);
+        }
+        return response()->json(['data' => $categories], 200);
     }
 
     //methods store, 

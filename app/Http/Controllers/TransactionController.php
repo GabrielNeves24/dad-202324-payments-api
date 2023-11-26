@@ -202,6 +202,7 @@ class TransactionController extends Controller
                 $vCardOrigem->save();
                 return response()->json([
                     'message' => 'Transação Credito criada com sucesso',
+                    'data' => $transactionOrigem
                 ], 201);
             }catch (\Exception $e) {
                 // Handle any exceptions and return an error response

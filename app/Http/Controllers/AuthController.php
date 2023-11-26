@@ -14,6 +14,9 @@ use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use App\Models\DefaultCategory;
+use App\Models\Category;
+use Exception;
 
 
 
@@ -154,26 +157,48 @@ class AuthController extends Controller
             'password' => 'required|string|min:8',
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'photo_url' => 'nullable|file|mimes:jpg,jpeg,png|max:4096',
+            'photo_url' => 'nullable|image|mimes:jpg,jpeg,png|max:4096',
             'confirmation_code' => 'required|digits:4',
         ]);
-        //verificar se não existe um user com o mesmo PHONE_NUMBER
+        //verificar se não existe um vcard com o mesmo PHONE_NUMBER
+        if (Vcard::where('phone_number', '=', $validatedData['phone_number'])->exists()) {
+            return response()->json(['error' => 'Número de telefone já existe'], 401);
+        }
+        //verificar se não existe um user/vcards(view) com o mesmo email
+        if (User::where('email', '=', $validatedData['email'])->exists()) {
+            return response()->json(['error' => 'Email já existe'], 401);
+        }
+        //verificar se todos os dados sao validos
+        $dataValidated = Validator::make($request->all(), [
+            'phone_number' => 'required|string|regex:/^9[1236]\d{7}$/|unique:vcards',
+            'password' => 'required|string|min:8',
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'photo_url' => 'nullable|image|mimes:jpg,jpeg,png|max:4096',
+            'confirmation_code' => 'required|digits:4',
+        ]);
+        if($dataValidated->fails()){
+            return response()->json(['error' => $dataValidated->errors()->all()]);
+        }
+
         try{
-            
-            
-            // Upload the photo if it exists
-            if ($request->hasFile('photo_url')) {
-                $randomString = Str::random(6); // Using Laravel's Str::random for generating random string
-                $file = $request->file('photo_url');
-                $filename = $validatedData['phone_number'] . '_' . $randomString . '.' . $file->getClientOriginalExtension();
-                $file->storeAs('fotos', $filename, 'public');
-                //$vCard->photo_url = $filename;
-                //$vCard->save();
-            }else{
-                $filename = 'default.png';
+            // // Upload the photo if it exists
+            // if ($request->hasFile('photo_url')) {
+            //     $randomString = Str::random(6); // Using Laravel's Str::random for generating random string
+            //     $file = $request->file('photo_url');
+            //     $filename = $validatedData['phone_number'] . '_' . $randomString . '.' . $file->getClientOriginalExtension();
+            //     $file->storeAs('fotos', $filename, 'public');
+            //     //$vCard->photo_url = $filename;
+            //     //$vCard->save();
+            // }else{
+            //     $filename = 'default.png';
                 
-            }
-            
+            // }
+            // //if fail to upload photo return error
+            // if($filename == null){
+            //     return response()->json(['error' => 'Erro ao fazer upload da foto'], 401);
+            // }
+            $filename = 'default.png';
             $vCard = Vcard::create([
                 'phone_number' => $validatedData['phone_number'],
                 'name' => $validatedData['name'],
@@ -185,7 +210,24 @@ class AuthController extends Controller
                 'max_debit' => 5000,
                 'photo_url' => $filename,
             ]);
-            $vCard->save();
+
+            //$vCard->save();
+
+            //criar as categorias default
+            // try{
+            //     $defaultCategories = DefaultCategory::all();
+            //     dd($defaultCategories)
+            //     foreach($defaultCategories as $defaultCategory){
+            //         $category = new Category();
+            //         $category->name = $defaultCategory->name;
+            //         $category->type = $defaultCategory->type;
+            //         $category->vcard = $vCard->phone_number;
+            //         $category->save();
+            //     }
+            // }catch(Exception $e){
+            //     return response()->json(['error' => 'Erro ao criar as categorias default'], 401);
+            // }
+
             
             // Retunr the data to my Vue3 axios 
             return response()->json([
