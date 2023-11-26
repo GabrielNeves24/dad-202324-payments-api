@@ -18,16 +18,16 @@ class Category extends Model
 
     public $timestamps = false;
     //join Category com Vcard, vcard=phone_number
-    public function vcard()
-    {
-        return $this->belongsTo(VCard::class, 'phone_number', 'id');
-    }
+    // public function vcard()
+    // {
+    //     return $this->belongsTo(VCard::class, 'phone_number', 'id');
+    // }
 
-    //connect no many category:id on table transacions
-    public function transactions()
-    {
-        return $this->hasMany(Transaction::class, 'category_id', 'id');
-    }
+    // //connect no many category:id on table transacions
+    // public function transactions()
+    // {
+    //     return $this->hasMany(Transaction::class, 'category_id', 'id');
+    // }
 
 
 }

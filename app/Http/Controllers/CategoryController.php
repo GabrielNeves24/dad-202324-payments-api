@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Category;
+use App\Models\VCard;
+use App\Models\Transaction;
 
 class CategoryController extends Controller
 {
@@ -13,6 +15,12 @@ class CategoryController extends Controller
         $categories = Category::where('vcard', $vcard)->get();
         return response()->json(['categories' => $categories], 200);
     }
+
+    // public function getAllCategories(Request $request)
+    // {
+    //     $categories = Category::all();
+    //     return response()->json(['data' => $categories], 200);
+    // }
 
     public function show($vcard, $id)
     {

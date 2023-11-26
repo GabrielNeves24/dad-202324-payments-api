@@ -314,4 +314,30 @@ class TransactionController extends Controller
         return response()->json(['data' => $transaction], 200);
         //return response()->json(['vcard' => $vcard], 200);
     }
+
+    public function GetTransactionById($id)
+    {
+        $transaction = Transaction::find($id);
+        return response()->json(['data' => $transaction], 200);
+    }
+
+    public function updateTransactionById(Request $request)
+    {
+        //it can only update the description and category_id on Category Table
+        $transaction = Transaction::find($request->id);
+        //validate data
+        $request->validate([
+            'description' => 'nullable|string|max:255',
+            'category_id' => 'nullable|exists:categories,id',
+        ]);
+        //update data if altered
+        if ($request->description != null) {
+            $transaction->description = $request->description;
+        }
+        if ($request->category_id != null) {
+            $transaction->category_id = $request->category_id;
+        }
+        $transaction->save();
+        return response()->json(['data' => $transaction], 200);
+    }
 }

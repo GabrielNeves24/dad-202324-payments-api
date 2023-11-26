@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+
 class Transaction extends Model
 {
     use HasFactory, SoftDeletes;
@@ -41,10 +42,10 @@ class Transaction extends Model
     /**
      * Get the category associated with the transaction.
      */
-    public function category()
-    {
-        return $this->belongsTo(Category::class, 'category_id');
-    }
+    // public function category()
+    // {
+    //     return $this->belongsTo(Category::class, 'category_id');
+    // }
 
     /**
      * Get the pair transaction associated with the transaction.

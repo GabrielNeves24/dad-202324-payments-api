@@ -39,21 +39,29 @@ Route::post('/register', [AuthController::class, 'register']);
 
 Route::middleware('auth:api')->group(function () {
     Route::get('users/me', [UserController::class, 'show_me']);
-    Route::get('vcards/{phone_number}/transactions/all', [VCardController::class, 'getTransactionsbyphoneNumber']);
-    Route::post('transactions/debit', [TransactionController::class, 'store']);
-    Route::post('transactions/credit', [TransactionController::class, 'storeCredit']);
     Route::post('logout' , [AuthController::class, 'logout']);
+    Route::get('vcards/{phone_number}', [VCardController::class, 'getVCardsbyphoneNumber']);
+
+    //categorias
+    Route::get('vcards/categories', [CategoryController::class, 'getAllCategories']);
     Route::get('vcards/{phone_number}/categories', [VCardController::class, 'getCategoriesbyphoneNumber']);
-    Route::delete('vcards/{phone_number}/categories/{id}', [VCardController::class, 'deleteCategorybyphoneNumber']);
-    //Route::get('vcards/{phone_number}/categories', [VCardController::class, 'getCategoriesbyphoneNumber']);
+    Route::put('vcards/{phone_number}/categories', [VCardController::class, 'updateCategoryById']);
     Route::get('vcards/{phone_number}/categories/debit', [VCardController::class, 'getCategoriesbyphoneNumberCredit']);
     Route::get('vcards/{phone_number}/categories/credit', [VCardController::class, 'getCategoriesbyphoneNumberDebit']);
-    
-    
-
-    Route::get('vcards/{phone_number}', [VCardController::class, 'getVCardsbyphoneNumber']);
-    Route::get('/vcards/{phone_number}/transactions/last30days', [VCardController::class, 'getLast30DaysTransactions']);
+    Route::get('vcards/{phone_number}/categories/{id}', [VCardController::class, 'getCategorybyphoneNumberAndId']);
+    Route::delete('vcards/{phone_number}/categories/{id}', [VCardController::class, 'deleteCategorybyphoneNumber']);
     Route::post('vcards/{phone_number}/categories', [CategoryController::class, 'addCategoryByPhoneNumber']);
+    //Route::get('vcards/{phone_number}/categories', [VCardController::class, 'getCategoriesbyphoneNumber']);
+    //fim categorias
+    
+    //transactions
+    Route::get('/vcards/{phone_number}/transactions/last30days', [VCardController::class, 'getLast30DaysTransactions']);
+    Route::post('transactions/debit', [TransactionController::class, 'store']);
+    Route::post('transactions/credit', [TransactionController::class, 'storeCredit']);
+    Route::get('transactions/{id}', [TransactionController::class, 'GetTransactionById']);
+    Route::put('transactions', [TransactionController::class, 'updateTransactionById']);
+    Route::get('vcards/{phone_number}/transactions/all', [VCardController::class, 'getTransactionsbyphoneNumber']);
+    //dim transactions
 
     // Routes for regular users protected by the 'api' guard
     Route::get('users', [UserController::class, 'getAllUsers']);

@@ -310,4 +310,50 @@ class VCardController extends Controller
             return response()->json(['message' => `Categoria $id eliminada permanentemente com sucesso`], 200);
         }
     }
+
+    public function getCategorybyphoneNumberAndId($phone_number, $id)
+    {
+        //$vcard = VCard::findOrFail($phone_number);
+        $category = Category::findOrFail($id);
+        // caso nao exista devolve erro
+        if(!$category){
+            return response()->json(['message' => `Categoria $id não encontrada`], 404);
+        }
+        return response()->json(['data' => $category], 200);
+    }
+
+    public function updateCategoryById(Request $request){
+        // Validate the incoming request data
+        $validatedData = $request->validate([
+            'id' => 'required|integer', // Add any validation rules you need
+            'name' => 'sometimes|required|string',
+            'type' => 'sometimes|required|string',
+            'vcard' => 'sometimes|required|string',
+        ]);
+        $phone_number= $request->vcard;
+        $id = $request->id;
+        // Check if the VCard with the provided phone number exists
+        $category = Category::where('vcard', $phone_number)->where('id', $id)->first();
+
+        if (!$category) {
+            return response()->json(['message' => "Categoria $id não encontrada"], 404);
+        }
+
+        // Update only if fields are present and not empty
+        if ($request->filled('name')) {
+            $category->name = $validatedData['name'];
+        }
+        if ($request->filled('type')) {
+            $category->type = $validatedData['type'];
+        }
+        if ($request->filled('vcard')) {
+            $category->vcard = $validatedData['vcard'];
+        }
+
+        $category->save();
+
+        return response()->json(['message' => "Categoria $id atualizada com sucesso"], 200);
+    }
+
+    
 }
