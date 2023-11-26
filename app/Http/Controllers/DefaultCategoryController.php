@@ -7,16 +7,47 @@ use App\Models\DefaultCategory;
 
 class DefaultCategoryController extends Controller
 {
-    public function index()
+    public function categoriesDefaultAll()
     {
         $defaultCategories = DefaultCategory::all();
-        return response()->json(['default_categories' => $defaultCategories], 200);
+        return response()->json(['data' => $defaultCategories], 200);
     }
 
-    public function show($id)
+    public function show(Request $request)
+    {
+        $defaultCategory = DefaultCategory::findOrFail($request->id);
+        return response()->json(['data' => $defaultCategory], 200);
+    }
+
+    public function createCategoriesDefault(Request $request)
+    {
+        //valide data
+        $validatedData = $request->validate([
+            'name' => 'required|max:255',
+            'type' => 'required|max:1',
+        ]);
+        $defaultCategory = DefaultCategory::create($validatedData);
+        return response()->json(['data' => $defaultCategory], 201);
+    }
+
+    public function updateCategoriesDefault(Request $request, $id)
     {
         $defaultCategory = DefaultCategory::findOrFail($id);
-        return response()->json(['default_category' => $defaultCategory], 200);
+        $defaultCategory->update($request->all());
+        return response()->json(['data' => $defaultCategory], 200);
+    }
+
+    public function deleteCategoriesDefault(Request $request, $id)
+    {
+        $defaultCategory = DefaultCategory::findOrFail($id);
+        $defaultCategory->delete();
+        return response()->json(['data' => $defaultCategory], 200);
+    }
+
+    public function categoriesDefaultByID(Request $request, $id)
+    {
+        $defaultCategory = DefaultCategory::findOrFail($id);
+        return response()->json(['data' => $defaultCategory], 200);
     }
 
     //methods store, 

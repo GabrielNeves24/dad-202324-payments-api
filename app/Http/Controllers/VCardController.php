@@ -8,7 +8,9 @@ use App\Models\VCard;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Category;
+use App\Models\DefaultCategory;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class VCardController extends Controller
 {
@@ -237,8 +239,6 @@ class VCardController extends Controller
         $validatedData = $request->validate([
             'name' => 'sometimes|required|string',
             'email' => 'sometimes|required|email',
-            'password' => 'nullable|string', // Changed to nullable
-            'confirmation_code' => 'nullable|integer|digits:4',
             'photo_url' => 'nullable|image',
         ]);
 
@@ -256,18 +256,13 @@ class VCardController extends Controller
         if ($request->filled('email')) {
             $vcard->email = $validatedData['email'];
         }
-        if ($request->filled('password')) {
-            $vcard->password = Hash::make($validatedData['password']);
-        }
-        if ($request->filled('confirmation_code')) {
-            $vcard->confirmation_code = $validatedData['confirmation_code'];
-        }
+
         if ($request->hasFile('photo_url')) {
             $randomString = Str::random(6); // Using Laravel's Str::random for generating random string
             $file = $request->file('photo_url');
             $filename = $validatedData['phone_number'] . '_' . $randomString . '.' . $file->getClientOriginalExtension();
             $file->storeAs('fotos', $filename, 'public');
-            $vCard->photo_url = $filename;
+            $vcard->photo_url = $filename;
             //$vCard->save();
         }
 
@@ -355,5 +350,30 @@ class VCardController extends Controller
         return response()->json(['message' => "Categoria $id atualizada com sucesso"], 200);
     }
 
-    
+    public function updatePasswordVCard(Request $request){
+        // Validate the incoming request data
+        $validatedData = $request->validate([
+            'id' => 'required|integer', 
+            'confirmation_code' => 'integer|digits:4',
+            'password' => 'required|string',
+        ]);
+
+        // Check if the VCard with the provided phone number exists
+        $vcard = VCard::where('phone_number', $request->id)->first();
+
+        if (!$vcard) {
+            return response()->json(['message' => "VCard $request->id não encontrado"], 404);
+        }
+
+        if ($request->filled('password')) {
+            $vcard->password = Hash::make($validatedData['password']);
+        }
+        if ($request->filled('confirmation_code')) {
+            $vcard->confirmation_code = $validatedData['confirmation_code'];
+        }
+        $vcard->save();
+
+        return response()->json(['message' => "VCard $request->id atualizado com sucesso"], 200);
+    }
+  
 }

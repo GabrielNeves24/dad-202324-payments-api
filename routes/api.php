@@ -53,6 +53,12 @@ Route::middleware('auth:api')->group(function () {
     Route::post('vcards/{phone_number}/categories', [CategoryController::class, 'addCategoryByPhoneNumber']);
     //Route::get('vcards/{phone_number}/categories', [VCardController::class, 'getCategoriesbyphoneNumber']);
     //fim categorias
+
+    Route::get('categories/defaults', [DefaultCategoryController::class, 'categoriesDefaultAll']);
+    Route::post('categories/defaults', [DefaultCategoryController::class, 'createCategoriesDefault']);
+    Route::get('categories/defaults/{id}', [DefaultCategoryController::class, 'categoriesDefaultByID']);
+    Route::put('categories/defaults/{id}', [DefaultCategoryController::class, 'updateCategoriesDefault']);
+    Route::delete('categories/defaults/{id}', [DefaultCategoryController::class, 'deleteCategoriesDefault']);
     
     //transactions
     Route::get('/vcards/{phone_number}/transactions/last30days', [VCardController::class, 'getLast30DaysTransactions']);
@@ -73,8 +79,15 @@ Route::middleware('auth:api')->group(function () {
     //Route::get('vcards/{phone_number}', [VCardController::class, 'getVCardsbyphoneNumber']);
     Route::get('transactions', [TransactionController::class, 'getAllTransactions']);
     Route::put('users/{id}', [UserController::class, 'update']);
+
+
     //update info on Vcard
-    Route::put('vcards/{phone_number}', [VCardController::class, 'updateVCard']);
+    Route::put('vcards/perfil/{phone_number}', [VCardController::class, 'updateVCard']);
+    Route::put('vcards/password/{phone_number}', [VCardController::class, 'updatePasswordVCard']);
+    Route::put('users/perfil/{id}', [UserController::class, 'update']);
+    Route::put('users/password/{id}', [UserController::class, 'updatePassword']);
+
+
     //update info on vcards about max_debit and block
     Route::put('vcards/user/{phone_number}', [VCardController::class, 'updateVCardUser']);
     //delete vcard

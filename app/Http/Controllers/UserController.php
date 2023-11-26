@@ -8,6 +8,7 @@ use App\Models\VCard;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Resources\UserResource;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
@@ -108,17 +109,17 @@ class UserController extends Controller
         return response()->json(['user' => $user], 201);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
-        // Find the user
-        $user = User::findOrFail($id);
-
         // Validate the request
         $validatedData = $request->validate([
-            'name' => 'sometimes|required|string',
-            'email' => 'sometimes|required|email|unique:users,email,' . $id,
-            'password' => 'nullable|string',
+            'id' => 'integer|required',
+            'name' => 'string',
+            'email' => 'email|unique:users',
         ]);
+        $id = $request->id;
+        // Find the user
+        $user = User::findOrFail($id);
 
         // Construct the update data array
         $updateData = [];
@@ -130,13 +131,37 @@ class UserController extends Controller
             $updateData['email'] = $validatedData['email'];
         }
 
+        // Perform the update using a raw SQL query or Query Builder
+        if (!empty($updateData)) {
+            DB::table('users')->where('id', $id)->update($updateData);
+        }
+
+        return response()->json(['message' => "User {$user->name} updated successfully"], 200);
+    }
+
+    public function updatePassword(Request $request, $id)
+    {
+        // Find the user
+        $user = User::findOrFail($id);
+
+        // Validate the request
+        $validatedData = $request->validate([
+            'id' => 'integer|required',
+            'confirmation_code' => 'number|digits:4',
+            'password' => 'string',
+        ]);
+
         if ($request->filled('password')) {
             $updateData['password'] = bcrypt($validatedData['password']);
         }
 
+        if ($request->filled('confirmation_code')) {
+            $updateData['confirmation_code'] = $validatedData['confirmation_code'];
+        }
+
         // Perform the update using a raw SQL query or Query Builder
         if (!empty($updateData)) {
-            \DB::table('users')->where('id', $id)->update($updateData);
+            DB::table('users')->where('id', $id)->update($updateData);
         }
 
         return response()->json(['message' => "User {$user->name} updated successfully"], 200);
