@@ -6,6 +6,7 @@ use App\Models\Transaction;
 use App\Models\VCard;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 
 class TransactionController extends Controller
 {
@@ -152,6 +153,7 @@ class TransactionController extends Controller
         return response()->json(['error' => 'An unexpected error occurred'], 500);
     }
 
+    
 
 
 

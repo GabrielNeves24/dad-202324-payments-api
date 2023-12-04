@@ -94,6 +94,11 @@ Route::middleware('auth:api')->group(function () {
     //delete vcard
     Route::delete('vcards/{phone_number}', [VCardController::class, 'deleteVCard']);
 
+    //graficos
+    Route::get('transactions/info/transacionsByMonth', [VCardController::class, 'getTransactionsByMonth']);
+    Route::get('vcards/{phone_number}/category-spending', [VCardController::class, 'getCategorySpendingByVCard']);
+
+
 });
 Route::get('vcards/{phone_number}/foto', [VCardController::class, 'getVCardImage']);
 

@@ -12,6 +12,7 @@ use App\Models\DefaultCategory;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 class VCardController extends Controller
 {
@@ -97,6 +98,52 @@ class VCardController extends Controller
         }
     }
 
+    public function getTransactionsByMonth(Request $request)
+    {
+        //dd("aqui");
+        $transactions = Transaction::select(
+            DB::raw('MONTH(datetime) as month'),
+            DB::raw('SUM(CASE WHEN type = "C" THEN value ELSE -value END) as total_value'),
+            DB::raw('AVG(value) as avg_value'),
+            DB::raw('COUNT(*) as transaction_count')
+            )
+            ->groupBy('month')
+            ->get();
+           // return $transactions;
+        // Map the result to your desired format
+        //dd($transactions);
+        $result = $transactions->map(function ($item) {
+            return [
+                'name' => date("M", mktime(0, 0, 0, $item->month, 1, 2000)), // Converts month number to month name
+                'pl' => $item->total_value,
+                'avg' => $item->avg_value,
+                'inc' => $item->transaction_count, // or any other calculation you need
+            ];
+        });
+
+        return response()->json(['date' => $result ], 201);
+    }
+
+    public function getCategorySpendingByVCard(Request $request,$phone_number)
+    {
+        $categorySpending = Transaction::select(
+            'categories.name as category',
+            DB::raw('SUM(transactions.value) as totalSpent')
+        )
+        ->join('categories', 'transactions.category_id', '=', 'categories.id')
+        ->where('transactions.vcard', $phone_number)
+        ->where('transactions.type', 'D') // Assuming 'D' stands for Debits
+        ->groupBy('categories.name')
+        ->get();
+
+        $topCategories = $categorySpending->sortByDesc('totalSpent')->take(5);
+
+        return response()->json([
+            'categoryData' => $categorySpending,
+            'topCategories' => $topCategories
+        ]);
+    }
+
     // public function updateProfile(Request $request, $phone_number)
     // {
     //     $vcard = VCard::findOrFail($phone_number);
@@ -124,22 +171,30 @@ class VCardController extends Controller
 
     
 
-    public function getLast30DaysTransactions($phone_number)
-{
-    $startDate = Carbon::now()->subDays(30);
-    $endDate = Carbon::now();
+    public function getLast30DaysTransactions(Request $request,$phone_number)
+    {
+        $thirtyDaysAgo = Carbon::now()->subDays(30);
 
-    $transactions = Transaction::where('vcard', $phone_number)
-                                ->whereBetween('date', [$startDate, $endDate])
-                                ->orderBy('date', 'asc')
-                                ->get();
+        $transactions = Transaction::where('vcard', $phone_number)
+            ->where('date', '>=', $thirtyDaysAgo)
+            ->groupBy(DB::raw('DATE(date)')) // Group by date
+            ->orderBy('date', 'asc')
+            ->get([
+                DB::raw('DATE(date) as date'),
+                DB::raw('SUM(CASE WHEN type = "C" THEN value ELSE -value END) as daily_sum')
+            ]);
 
-    if($transactions->isEmpty()){
-        return response()->json(['message' => "No transactions found for the last 30 days for vCard $phone_number"], 404);
+        // Format the date and return
+        $formattedTransactions = $transactions->map(function ($transaction) {
+            $date = Carbon::createFromFormat('Y-m-d', $transaction->date);
+            return [
+                'date' => $date->format('d/m'), // Format as 'day/month'
+                'daily_sum' => $transaction->daily_sum
+            ];
+        });
+
+        return response()->json(['data' => $formattedTransactions]);
     }
-
-    return response()->json(['data' => $transactions], 200);
-}
 
     public function getCategoriesbyphoneNumberDebit($phone_number)
     {
