@@ -18,73 +18,47 @@ class TransactionController extends Controller
      */
     public function store(Request $request) : JsonResponse
     {
-        // if ($request['payment_type'] == 'MB' || $request['payment_type'] == 'MBWAY' || $request['payment_type'] == 'PAYPAL' || $request['payment_type'] == 'IBAN' || $request['payment_type'] == 'VISA') {
-        //     // Create a credit transaction
-        //     $request->validate([
-        //         'vcard' => 'required|max:9',
-        //         'type' => 'required|in:C,D',
-        //         'value' => 'required|numeric|min:0.01',
-        //         'payment_type' => 'required|in:VCARD,MBWAY,PAYPAL,IBAN,MB,VISA',
-        //         'payment_reference' => 'required|string|max:255',
-        //         'pair_transaction' => 'nullable|exists:transactions,id',
-        //         'pair_vcard' => 'nullable|string|max:9',
-        //         'category_id' => 'nullable|exists:categories,id',
-        //         'description' => 'nullable|string|max:255',
-        //         // Add any other validation rules for custom_options and custom_data
-        //     ]);
-    
-        //     $vCard = VCard::where('phone_number', $request['vcard'])->first();
-    
-        //     if (!$vCard) {
-        //         return response()->json(['error' => 'VCard not found'], 404);
-        //     }
-        //     $old_balance = $vCard->balance;
-        //     $new_balance = $old_balance - $request['value'];
-    
-        //     // Create a transaction record
-        //     $transaction = Transaction::create([
-        //         'vcard' => $vCard->phone_number,
-        //         'type' => $request['type'],
-        //         'value' => $request['value'],
-        //         'old_balance' => $old_balance,
-        //         'new_balance' => $new_balance,
-        //         'payment_type' => $request['payment_type'],
-        //         'payment_reference' => $request['payment_reference'],
-        //         'category_id' => $request['category_id'], 
-        //         'description' => $request['description'],
-        //         'date' => now()->toDateString(),
-        //         'datetime' => now(),
-        //         // Set other transaction data accordingly
-        //     ]);
-        //     $transaction->save();
+        $request->validate([
+            'vcard' => 'required|max:9',
+            'value' => 'required|numeric|min:0.01',
+            'payment_type' => 'required|in:VCARD,MBWAY,MB,IBAN,VISA',
+            'payment_reference' => 'required|max:9',
+            'category_id' => 'nullable|exists:categories,id',
+            'description' => 'nullable|string|max:255',
+            // Add any other validation rules for custom_options and custom_data
+        ]);
+        $vCardOrigem = VCard::where('phone_number', $request['vcard'])->first();
+        if (!$vCardOrigem) {
+            return response()->json(['error' => 'VCard not found'], 404);
+        }
 
-        //     // Remove the amount from the balance on vCard
-        //     $vCard->balance = $vCard->balance - $request['value'];
-        //     $vCard->save();
-    
-        //     return response()->json(['message' => 'Transação criada com sucesso', 'transaction' => $transaction], 201);
-        // } 
-        if ($request['payment_type'] == 'VCARD' ) {
-            //now in this case is the same as the debit transaction but i will recevied one more filed the A vCard payment type means that the payment is relative
-            //to a transfer between 2 vCards and 2 transactions (paired transactions) are created – a debit
-            //transaction on the source vCard (the vCard where the payment is created) and a credit transaction
-            //on the destination vCard. vCard payments are handled exclusively by the vCard platform
-            $request->validate([
-                'vcard' => 'required|max:9',
-                'type' => 'required|in:C,D',
-                'value' => 'required|numeric|min:0.01',
-                'payment_type' => 'required|in:VCARD',
-                'payment_reference' => 'required|max:9',
-                'category_id' => 'nullable|exists:categories,id',
-                'description' => 'nullable|string|max:255',
-                // Add any other validation rules for custom_options and custom_data
+        if($request['payment_type'] != 'VCARD'){
+            $old_balance = $vCardOrigem->balance;
+            $new_balance = $old_balance - $request['value'];
+
+            // Create a transaction record
+            $transactionOrigem = new Transaction([
+                'vcard' => $vCardOrigem->phone_number,
+                'type' => 'C',
+                'value' => $request['value'],
+                'old_balance' => $old_balance,
+                'new_balance' => $new_balance,
+                'payment_type' => $request['payment_type'],
+                'payment_reference' => $request['payment_reference'],
+                'category_id' => $request['category_id'],
+                'description' => $request['description'],
+                'date' => now()->toDateString(),
+                'datetime' => now(),
+                // Set other transaction data accordingly
             ]);
-
-            $vCardOrigem = VCard::where('phone_number', $request['vcard'])->first();
+            $transactionOrigem->save();
+            $vCardOrigem->balance -= $request['value'];
+            $vCardOrigem->save();
+            return response()->json([
+                'message' => 'Transação criada com sucesso (VCARD - VCARD)',
+            ], 201);
+        }else{
             $vCardDestino = VCard::where('phone_number', $request['payment_reference'])->first();
-            if (!$vCardOrigem) {
-                return response()->json(['error' => 'VCard not found'], 404);
-            }
             if (!$vCardDestino) {
                 return response()->json(['error' => 'VCard Destino não existe'], 404);
             }
@@ -95,7 +69,7 @@ class TransactionController extends Controller
                 // Create a transaction record
                 $transactionOrigem = new Transaction([
                     'vcard' => $vCardOrigem->phone_number,
-                    'type' => $request['type'],
+                    'type' => 'D',
                     'value' => $request['value'],
                     'old_balance' => $old_balance,
                     'new_balance' => $new_balance,
@@ -153,19 +127,8 @@ class TransactionController extends Controller
         return response()->json(['error' => 'An unexpected error occurred'], 500);
     }
 
-    
-
-
-
-
     public function storeCredit(Request $request) : JsonResponse
     {
-      
-        // if ($request['payment_type'] == 'VCARD' ) {
-            //now in this case is the same as the debit transaction but i will recevied one more filed the A vCard payment type means that the payment is relative
-            //to a transfer between 2 vCards and 2 transactions (paired transactions) are created – a debit
-            //transaction on the source vCard (the vCard where the payment is created) and a credit transaction
-            //on the destination vCard. vCard payments are handled exclusively by the vCard platform
             $request->validate([
                 'vcard' => 'required|max:9',
                 'value' => 'required|numeric|min:0.01',
@@ -218,87 +181,6 @@ class TransactionController extends Controller
 
 
 
-    // /**
-    //  * Create a debit transaction for a vCard.
-    //  *
-    //  * @param  Request  $request
-    //  * @return JsonResponse
-    //  */
-    // public function createDebitTransaction(Request $request): JsonResponse
-    // {
-    //     $request->validate([
-    //         'vcard' => 'required|string|max:9',
-    //         'type' => 'required|in:C,D',
-    //         'value' => 'required|numeric|min:0.01',
-    //         'old_balance' => 'required|numeric',
-    //         'new_balance' => 'required|numeric',
-    //         'payment_type' => 'required|in:VCARD,MBWAY,PAYPAL,IBAN,MB,VISA',
-    //         'payment_reference' => 'required|string|max:255',
-    //         'pair_transaction' => 'nullable|exists:transactions,id',
-    //         'pair_vcard' => 'nullable|string|max:9',
-    //         'category_id' => 'nullable|exists:categories,id',
-    //         'description' => 'nullable|string|max:255',
-    //         // Add any other validation rules for custom_options and custom_data
-    //     ]);
-
-    //     $vCard = VCard::where('phone_number', $request['vcard'])->first();
-
-    //     if (!$vCard) {
-    //         return response()->json(['error' => 'VCard not found'], 404);
-    //     }
-
-    //     // Create a transaction record
-    //     $transaction = Transaction::create([
-    //         'vcard' => $vCard->phone_number,
-    //         'type' => $request['type'],
-    //         'value' => $request['value'],
-    //         'old_balance' => $request['old_balance'],
-    //         'new_balance' => $request['new_balance'],
-    //         'payment_type' => $request['payment_type'],
-    //         'payment_reference' => $request['payment_reference'],
-    //         'description' => $request['description'],
-    //         'date' => $request['date'],
-    //         'datetime' => $request['datetime'],
-    //         // Set other transaction data accordingly
-    //     ]);
-
-    //     // Remove the amount from the balance on vCard
-    //     $vCard->balance = $vCard->balance - $request['value'];
-    //     $vCard->save();
-
-    //     return response()->json(['message' => 'Transação criada com sucesso', 'transaction' => $transaction], 201);
-    // }
-
-
-    // public function createCreditTransaction(Request $request): JsonResponse
-    // {
-    //     $data = $request->validate([
-    //         'vcard_phone_number' => 'required|string',
-    //         'type' => 'required|string', // Assuming 'type' can be 'C' for credit
-    //         'value' => 'required|numeric|min:0.01',
-    //         'payment_type' => 'required|string',
-    //         'payment_reference' => 'required|string',
-    //         // Additional validation for other fields as needed
-    //     ]);
-
-    //     $vCard = VCard::where('phone_number', $data['vcard_phone_number'])->first();
-
-    //     if (!$vCard) {
-    //         return response()->json(['error' => 'VCard not found'], 404);
-    //     }
-
-    //     // Create a transaction record
-    //     $transaction = Transaction::create([
-    //         'vcard' => $vCard->phone_number,
-    //         'type' => $data['type'],
-    //         'value' => $data['value'],
-    //         'payment_type' => $data['payment_type'],
-    //         'payment_reference' => $data['payment_reference'],
-    //         // Set other transaction data accordingly
-    //     ]);
-
-    //     return response()->json(['message' => 'Credit transaction created successfully', 'transaction' => $transaction], 201);
-    // }
 
     
 
