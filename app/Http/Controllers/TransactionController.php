@@ -22,7 +22,7 @@ class TransactionController extends Controller
             'vcard' => 'required|max:9',
             'value' => 'required|numeric|min:0.01',
             'payment_type' => 'required|in:VCARD,MBWAY,MB,IBAN,VISA',
-            'payment_reference' => 'required|max:9',
+            'payment_reference' => 'required',
             'category_id' => 'nullable|exists:categories,id',
             'description' => 'nullable|string|max:255',
             // Add any other validation rules for custom_options and custom_data
@@ -133,7 +133,7 @@ class TransactionController extends Controller
                 'vcard' => 'required|max:9',
                 'value' => 'required|numeric|min:0.01',
                 'payment_type' => 'required',
-                'payment_reference' => 'required|max:9',
+                'payment_reference' => 'required',
                 'category_id' => 'nullable',
                 'description' => 'nullable|string|max:255',
                 // Add any other validation rules for custom_options and custom_data

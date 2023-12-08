@@ -158,30 +158,30 @@ class UserController extends Controller
         }
     }
 
-    public function updatePassword(Request $request, $id)
-    {
-            // Validate the request data
-        $validator = Validator::make($request->all(), [
-            'password' => 'required|string|min:3',
-        ]);
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 400);
-        }
+    // public function updatePassword(Request $request, $id)
+    // {
+    //         // Validate the request data
+    //     $validator = Validator::make($request->all(), [
+    //         'password' => 'required|string|min:3',
+    //     ]);
+    //     if ($validator->fails()) {
+    //         return response()->json($validator->errors(), 400);
+    //     }
 
-        // Find the user
-        $user = RealUser::find($id);
+    //     // Find the user
+    //     $user = RealUser::find($id);
         
 
-        if (!$user) {
-            return response()->json(['error' => 'User not found'], 404);
-        }
+    //     if (!$user) {
+    //         return response()->json(['error' => 'User not found'], 404);
+    //     }
 
-        // Update user password
-        $user->password = Hash::make($request->password);
-        $user->save();
+    //     // Update user password
+    //     $user->password = Hash::make($request->password);
+    //     $user->save();
 
-        return response()->json(['message' => 'Password updated successfully']);
-    }
+    //     return response()->json(['message' => 'Password updated successfully']);
+    // }
 
 
 

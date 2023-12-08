@@ -56,23 +56,45 @@ class VCardController extends Controller
         }
     }
 
+    
+
     public function update($phone_number, Request $request)
     {
+        
         if($request->filled('name') && $request->filled('email')){
             $vcard = VCard::findOrFail($phone_number);
             // Validate the request
             $this->validate($request, [
                 'name' => 'string',
                 'email' => 'email|unique:users,email,' . $vcard->id,
+                'photo_url' => 'nullable|max:4096',
             ]);
 
-            // Update the user
-            $vcard->update([
-                'name' => $request->name,
-                'email' => $request->email,
-            ]);
+            
 
-            return response()->json(['vcard' => $vcard], 200);
+            // Upload the photo if it exists
+            if ($request->hasFile('photo_url')) {
+                $randomString = Str::random(6); // Using Laravel's Str::random for generating random string
+                $file = $request->file('photo_url');
+                $filename = $vcard->phone_number . '_' . $randomString . '.' . $file->getClientOriginalExtension();
+                $file->storeAs('fotos', $filename, 'public');
+                $vcard->photo_url = $filename;  
+                // Update the user
+                $vcard->update([
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    'photo_url' => $filename,
+                ]); 
+                return response()->json(['vcard' => $vcard], 200);
+            }else{
+                // Update the user
+                $vcard->update([
+                    'name' => $request->name,
+                    'email' => $request->email,
+                ]);
+                return response()->json(['vcard' => $vcard], 200);
+            }
+            
         }else 
         if($request->filled('password')){
             // Validate the request

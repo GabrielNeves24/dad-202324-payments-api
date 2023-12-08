@@ -83,10 +83,10 @@ Route::middleware('auth:api')->group(function () {
 
     //update info on Vcard
     //Route::put('vcards/perfil/{id}', [VCardController::class, 'updateVCard']);
-    Route::put('vcards/{phone_number}', [VCardController::class, 'update']);
+    Route::post('vcards/{phone_number}', [VCardController::class, 'update']);
     //Route::put('vcards/password/{id}', [VCardController::class, 'updatePasswordVCard']);
     Route::put('users/perfil/{id}', [UserController::class, 'update']);
-    Route::put('users/password/{id}', [UserController::class, 'updatePassword']);
+    //Route::put('users/password/{id}', [UserController::class, 'updatePassword']);
 
 
     //update info on vcards about max_debit and block

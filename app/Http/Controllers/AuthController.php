@@ -178,27 +178,20 @@ class AuthController extends Controller
             'confirmation_code' => 'required|digits:4',
         ]);
         if($dataValidated->fails()){
-            return response()->json(['error' => $dataValidated->errors()->all()]);
+            return response()->json(['error' => $dataValidated->errors()->all()], 422);
         }
 
         try{
-            // // Upload the photo if it exists
-            // if ($request->hasFile('photo_url')) {
-            //     $randomString = Str::random(6); // Using Laravel's Str::random for generating random string
-            //     $file = $request->file('photo_url');
-            //     $filename = $validatedData['phone_number'] . '_' . $randomString . '.' . $file->getClientOriginalExtension();
-            //     $file->storeAs('fotos', $filename, 'public');
-            //     //$vCard->photo_url = $filename;
-            //     //$vCard->save();
-            // }else{
-            //     $filename = 'default.png';
+             // Upload the photo if it exists
+             if ($request->hasFile('photo_url')) {
+                 $randomString = Str::random(6); 
+                 $file = $request->file('photo_url');
+                 $filename = $request->phone_number . '_' . $randomString . '.' . $file->getClientOriginalExtension();
+                 $file->storeAs('fotos', $filename, 'public');
+             }else{
+                 $filename = 'default.png';
                 
-            // }
-            // //if fail to upload photo return error
-            // if($filename == null){
-            //     return response()->json(['error' => 'Erro ao fazer upload da foto'], 401);
-            // }
-            $filename = 'default.png';
+             }
             $vCard = Vcard::create([
                 'phone_number' => $validatedData['phone_number'],
                 'name' => $validatedData['name'],
@@ -213,13 +206,11 @@ class AuthController extends Controller
 
             try {
                 $defaultCategories = DefaultCategory::all();
-                //dd($defaultCategories);
                 foreach ($defaultCategories as $defaultCategory) {
                     Category::create([
-                        'vcard' => $validatedData['phone_number'], // Assuming vCard's phone_number is used as a foreign key
+                        'vcard' => $validatedData['phone_number'], 
                         'type' => $defaultCategory->type,
                         'name' => $defaultCategory->name,
-                        // Add any other fields if necessary
                     ]);
                 }
             }catch(Exception $e){
