@@ -140,7 +140,7 @@ class UserController extends Controller
             $validator = Validator::make($request->all(), [
                 'id' => 'required|integer',
                 'name' => 'string|max:255',
-                'email' => 'string|email|max:255|unique:users',
+                'email' => 'string|email|max:255',
             ]);
             if ($validator->fails()) {
                 return response()->json($validator->errors(), 400);
@@ -150,10 +150,15 @@ class UserController extends Controller
             if (!$user) {
                 return response()->json(['error' => 'User not found'], 404);
             }
-            // Update user
-            $user->name = $request->name;
-            $user->email = $request->email;
+            // Update user if data is difrente from original
+            if($user->name != $request->name){
+                $user->name = $request->name;
+            }
+            if($user->email != $request->email){
+                $user->email = $request->email;
+            }
             $user->save();
+
 
             return response()->json(['message' => 'User updated successfully']);
         }else{
