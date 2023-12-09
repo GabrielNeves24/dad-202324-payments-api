@@ -202,7 +202,7 @@ class VCardController extends Controller
         ]);
     }
 
-    
+
 
     // public function updateProfile(Request $request, $phone_number)
     // {
@@ -231,30 +231,49 @@ class VCardController extends Controller
 
     
 
-    public function getLast30DaysTransactions(Request $request,$phone_number)
+    public function getLast30DaysTransactions(Request $request, $phone_number)
     {
         $thirtyDaysAgo = Carbon::now()->subDays(30);
-
+    
+        // Retrieve the initial old_balance from the oldest transaction within the last 30 days
+        $initialTransaction = Transaction::where('vcard', $phone_number)
+            ->where('date', '>=', $thirtyDaysAgo)
+            ->orderBy('date', 'asc')
+            ->first(['old_balance']);
+    
+        // If there's no transaction in the last 30 days, set a default or handle accordingly
+        $old_balance = $initialTransaction ? $initialTransaction->old_balance : 0;
+    
         $transactions = Transaction::where('vcard', $phone_number)
             ->where('date', '>=', $thirtyDaysAgo)
             ->groupBy(DB::raw('DATE(date)')) // Group by date
             ->orderBy('date', 'asc')
             ->get([
                 DB::raw('DATE(date) as date'),
-                DB::raw('SUM(CASE WHEN type = "C" THEN value ELSE -value END) as daily_sum')
+                DB::raw('SUM(CASE WHEN type = "C" THEN value ELSE 0 END) as daily_credit'),
+                DB::raw('SUM(CASE WHEN type = "D" THEN value ELSE 0 END) as daily_debit')
             ]);
-
-        // Format the date and return
-        $formattedTransactions = $transactions->map(function ($transaction) {
+    
+        // Initialize the running balance with the old_balance from the oldest transaction
+        $running_balance = $old_balance;
+        $formattedTransactions = $transactions->map(function ($transaction) use (&$running_balance) {
             $date = Carbon::createFromFormat('Y-m-d', $transaction->date);
+            
+            // Calculate the running balance for each day
+            $running_balance += $transaction->daily_credit;
+            $running_balance -= $transaction->daily_debit;
+    
             return [
                 'date' => $date->format('d/m'), // Format as 'day/month'
-                'daily_sum' => $transaction->daily_sum
+                'daily_credit' => $transaction->daily_credit,
+                'daily_debit' => $transaction->daily_debit,
+                'running_balance' => $running_balance
             ];
         });
-
+    
         return response()->json(['data' => $formattedTransactions]);
     }
+    
 
     public function getCategoriesbyphoneNumberDebit($phone_number)
     {

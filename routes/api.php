@@ -90,6 +90,7 @@ Route::middleware('auth:api')->group(function () {
     //Route::put('vcards/password/{id}', [VCardController::class, 'updatePasswordVCard']);
     Route::put('users/perfil/{id}', [UserController::class, 'update']);
     //Route::put('users/password/{id}', [UserController::class, 'updatePassword']);
+    Route::delete('users/{id}', [UserController::class, 'destroy']);
 
 
     //update info on vcards about max_debit and block

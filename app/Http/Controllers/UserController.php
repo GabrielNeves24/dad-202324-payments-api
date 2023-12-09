@@ -216,7 +216,7 @@ class UserController extends Controller
     public function destroy($id)
     {
         // Find the user
-        $user = User::findOrFail($id);
+        $user = RealUser::findOrFail($id);
 
         // Delete the user
         $user->delete();

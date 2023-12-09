@@ -40,7 +40,11 @@ class AuthController extends Controller
         //if username is blocked return error
         $vCard = User::where('username', '=', $request->username)->first();
         if($vCard->blocked == 1){
-            return response()->json(['error' => 'VCard bloqueado'], 403);
+            return response()->json(['error' => 'Utilizador Bloqueado! Contactar administração'], 403);
+        }
+        //if is soft deleted return error
+        if($vCard->deleted_at != null){
+            return response()->json(['error' => 'VCard Eliminado!'], 403);
         }
         try {
             request()->request->add($this->passportAuthenticationData($request->username, $request->password));
