@@ -37,6 +37,11 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
+        //if username is blocked return error
+        $vCard = User::where('username', '=', $request->username)->first();
+        if($vCard->blocked == 1){
+            return response()->json(['error' => 'VCard bloqueado'], 403);
+        }
         try {
             request()->request->add($this->passportAuthenticationData($request->username, $request->password));
             $request = Request::create(env('PASSPORT_SERVER_URL') . '/oauth/token', 'POST');

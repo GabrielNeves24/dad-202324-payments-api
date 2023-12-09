@@ -97,6 +97,7 @@ Route::middleware('auth:api')->group(function () {
 
     //graficos
     Route::get('transactions/info/transacionsByMonth', [VCardController::class, 'getTransactionsByMonth']);
+    Route::get('transactions/info/transacionsByDay', [VCardController::class, 'getTransactionsByDay']);
     Route::get('vcards/{phone_number}/category-spending', [VCardController::class, 'getCategorySpendingByVCard']);
 
 

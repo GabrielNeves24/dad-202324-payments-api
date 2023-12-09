@@ -65,6 +65,9 @@ class TransactionController extends Controller
             if (!$vCardDestino) {
                 return response()->json(['error' => 'VCard Destino não existe'], 404);
             }
+            if ($vCardDestino->blocked == 1) {
+                return response()->json(['error' => 'VCard Destino Bloqueado'], 404);
+            }
             try {
                 $old_balance = $vCardOrigem->balance;
                 $new_balance = $old_balance - $request['value'];

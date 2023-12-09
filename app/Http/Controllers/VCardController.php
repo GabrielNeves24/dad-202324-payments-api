@@ -158,6 +158,30 @@ class VCardController extends Controller
         return response()->json(['date' => $result ], 201);
     }
 
+    public function getTransactionsByDay(Request $request){
+        $transactions = Transaction::select(
+            DB::raw('DAY(datetime) as day'),
+            DB::raw('SUM(CASE WHEN type = "C" THEN value ELSE -value END) as total_value'),
+            DB::raw('AVG(value) as avg_value'),
+            DB::raw('COUNT(*) as transaction_count')
+            )
+            ->groupBy('day')
+            ->get();
+           // return $transactions;
+        // Map the result to your desired format
+        //dd($transactions);
+        $result = $transactions->map(function ($item) {
+            return [
+                'name' => date("d", mktime(0, 0, 0, 1, $item->day, 2000)), // Converts month number to month name
+                'pl' => $item->total_value,
+                'avg' => $item->avg_value,
+                'inc' => $item->transaction_count, // or any other calculation you need
+            ];
+        });
+
+        return response()->json(['date' => $result ], 201);
+    }
+
     public function getCategorySpendingByVCard(Request $request,$phone_number)
     {
         $categorySpending = Transaction::select(
