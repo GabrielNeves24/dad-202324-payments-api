@@ -96,23 +96,35 @@ class VCardController extends Controller
             }
             
         }else 
-        if($request->filled('password')){
+        if($request->filled('password') || $request->filled('confirmation_code')){
             // Validate the request
-            $validated = Validator::make($request->all(), [
-                'password' => 'required|string|min:6',
-                'confirmation_code' => 'required|integer|digits:4',
-            ])->validate();
 
             // Find the VCard
             $vcard = VCard::find($phone_number);
             if (!$vcard) {
                 return response()->json(['error' => 'VCard not found'], 404);
             }
-
-            // Update the VCard
-            $vcard->password = Hash::make($validated['password']);
-            $vcard->confirmation_code = Hash::make($validated['confirmation_code']);
+            //update only if fields are present and not empty
+            if ($request->filled('password')) {
+                $validated =$this->validate($request, [
+                    'password' => 'string|min:6',
+                    //'confirmation_code' => 'integer|digits:4',
+                ]);
+                $vcard->password = Hash::make($validated['password']);
+            }
+            if ($request->filled('confirmation_code')) {
+                $validated =$this->validate($request, [
+                    //'password' => 'string|min:6',
+                    'confirmation_code' => 'integer|digits:4',
+                ]);
+                $vcard->confirmation_code = Hash::make($validated['confirmation_code']);
+            }
             $vcard->save();
+
+            // // Update the VCard
+            // $vcard->password = Hash::make($validated['password']);
+            // $vcard->confirmation_code = Hash::make($validated['confirmation_code']);
+            // $vcard->save();
 
             return response()->json(['message' => 'VCard password updated successfully'], 200);
         }else{
@@ -257,8 +269,8 @@ class VCardController extends Controller
 
         // Validate the request
         $this->validate($request, [
-            'confirmation_code' => 'required',
-            'password' => 'required',
+            'confirmation_code' => 'integer|digits:4',
+            'password' => 'string|min:6',
         ]);
 
         // Check if the password is correct

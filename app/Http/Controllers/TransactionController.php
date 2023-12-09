@@ -28,6 +28,9 @@ class TransactionController extends Controller
             // Add any other validation rules for custom_options and custom_data
         ]);
         $vCardOrigem = VCard::where('phone_number', $request['vcard'])->first();
+        if($vCardOrigem->blocked == 1){
+            return response()->json(['error' => 'VCard blocked'], 403);
+        }
         if (!$vCardOrigem) {
             return response()->json(['error' => 'VCard not found'], 404);
         }
@@ -140,6 +143,10 @@ class TransactionController extends Controller
             ]);
 
             $vCardOrigem = VCard::where('phone_number', $request['vcard'])->first();
+            //if vcard is blocked return error
+            if($vCardOrigem->blocked == 1){
+                return response()->json(['error' => 'VCard blocked'], 403);
+            }
             if (!$vCardOrigem) {
                 return response()->json(['error' => 'VCard not found'], 404);
             }

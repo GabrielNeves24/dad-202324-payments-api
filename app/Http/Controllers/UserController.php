@@ -61,6 +61,29 @@ class UserController extends Controller
 
     }
 
+    public function verifyPin(Request $request)
+    {
+        $enteredPassword = $request->input('enteredPassword');
+        $userType = $request->input('userType');
+        $id = $request->input('user');
+
+        if ($userType == 'A') {
+            $user = User::where('id', $id)->first();
+        } else {
+            $user = VCard::where('phone_number', $id)->first();
+        }
+
+        // Compare the entered password with the stored hashed password
+        if ($user && Hash::check($enteredPassword, $user->confirmation_code)) {
+            // Password is correct
+            return response()->json(['isValid' => true], 200);
+        } else {
+            // Password is incorrect
+            return response()->json(['isValid' => false], 400);
+        }
+
+    }
+
     public function create(Request $request)
     {
         // Validate the request data

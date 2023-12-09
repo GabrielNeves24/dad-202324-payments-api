@@ -72,6 +72,7 @@ Route::middleware('auth:api')->group(function () {
     // Routes for regular users protected by the 'api' guard
     Route::get('users', [UserController::class, 'getAllUsers']);
     Route::post('verify-password', [UserController::class, 'verifyPassword']);
+    Route::post('verify-pin', [UserController::class, 'verifyPin']);
     Route::post('users', [UserController::class, 'create']);
     //get user logon
     Route::get('users/{id}', [UserController::class, 'getUser']);
