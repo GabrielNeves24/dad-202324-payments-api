@@ -202,6 +202,8 @@ class VCardController extends Controller
         ]);
     }
 
+    
+
     // public function updateProfile(Request $request, $phone_number)
     // {
     //     $vcard = VCard::findOrFail($phone_number);

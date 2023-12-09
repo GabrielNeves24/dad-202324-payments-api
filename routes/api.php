@@ -67,6 +67,8 @@ Route::middleware('auth:api')->group(function () {
     Route::get('transactions/{id}', [TransactionController::class, 'GetTransactionById']);
     Route::put('transactions', [TransactionController::class, 'updateTransactionById']);
     Route::get('vcards/{phone_number}/transactions/all', [VCardController::class, 'getTransactionsbyphoneNumber']);
+    Route::get('transactions/info/totalTransactionByTypeDebit', [TransactionController::class, 'getTotalTransactionByPaymentTypeDebit']);
+    Route::get('transactions/info/totalTransactionByTypeCredit', [TransactionController::class, 'getTotalTransactionByPaymentTypeCredit']);
     //dim transactions
 
     // Routes for regular users protected by the 'api' guard

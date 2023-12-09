@@ -188,11 +188,30 @@ class TransactionController extends Controller
     }
 
 
+    public function getTotalTransactionByPaymentTypeDebit(Request $request)
+    {
+        //return data for a char as transationData
+        $ransactionByPaymeneType = Transaction::select('payment_type', DB::raw('count(*) as total'))
+            ->where('type', 'D')
+            ->groupBy('payment_type')
+            ->get();
+            //dd($transactionByPaymeneType);
 
-
-
-
+        return response()->json(['data' => $ransactionByPaymeneType], 200);
+        
+    } 
     
+    public function getTotalTransactionByPaymentTypeCredit(Request $request)
+    {
+        //return data for a char as transationData
+        $ransactionByPaymeneType = Transaction::select('payment_type', DB::raw('count(*) as total'))
+            ->where('type', 'C')
+            ->groupBy('payment_type')
+            ->get();
+
+        return response()->json(['data' => $ransactionByPaymeneType], 200);
+        
+    }
 
     public function getAllTrasacionsByNumber($phone_number)
     {
