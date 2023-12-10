@@ -384,23 +384,56 @@ class VCardController extends Controller
 
     public function deleteVCard($phone_number)
     {
-        $nome = VCard::where('phone_number', $phone_number)->value('name');
-        //caso o vcard não exista, retorna erro
-        if(!VCard::where('phone_number', $phone_number)->exists()){
-            return response()->json(['message' => `VCard $phone_number não encontrado`], 404);
-        }
-        //caso exista, deleta, caso esteja com saldo a 0 e sem dados de transações associados force delte
-        if(VCard::where('phone_number', $phone_number)->value('balance') == 0){
-            if (!Transaction::where('vcard', $phone_number)->exists()){
-                VCard::where('phone_number', $phone_number)->forceDelete();
-                return response()->json(['message' => `VCard $nome eliminado permanentemente com sucesso`], 200);
-            }
-        }    
-        $vcard = VCard::findOrFail($phone_number);
-        $vcard->delete();
+        $vcard = VCard::where('phone_number', $phone_number);
 
-        return response()->json(['message' => `VCard $nome eliminado (Soft) com sucesso`], 200);
+        if (!$vcard->exists()) {
+            return response()->json(['message' => "VCard $phone_number não encontrado"], 404);
+        }
+
+        $nome = $vcard->value('name');
+        $balance = $vcard->value('balance');
+
+        try {
+            DB::beginTransaction();
+            $hasTransactions = Transaction::where('vcard', $phone_number)->exists();
+
+            //se categorias exisitirem nas trnansacaoes apenas soft delete else force delete
+            if ($hasTransactions) {
+                $categories = Category::where('vcard', $phone_number)->get();
+                foreach ($categories as $category) {
+                    $category->delete();
+                }
+            } else {
+                $categories = Category::where('vcard', $phone_number)->get();
+                foreach ($categories as $category) {
+                    $category->forceDelete();
+                }
+            } 
+
+            // Conditions for deletion
+            if ($balance == 0) {
+                if ($hasTransactions) {
+                    // Perform a soft delete if there are transactions
+                    $vcard->delete();
+                    DB::commit();
+                    return response()->json(['message' => "VCard $nome eliminado (Soft Delete) com sucesso"], 200);
+                } else {
+                    // Force delete if no transactions are present
+                    $vcard->forceDelete();
+                    DB::commit();
+                    return response()->json(['message' => "VCard $nome eliminado permanentemente com sucesso"], 200);
+                }
+            } else {
+                DB::rollBack();
+                return response()->json(['message' => "VCard $nome não pode ser eliminado, saldo diferente de 0"], 404);
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => "Erro ao eliminar VCard: " . $e->getMessage()], 500);
+        }
     }
+
+    
 
     public function updateVCard(Request $request, $id){
         dd($request);
