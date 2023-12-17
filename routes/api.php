@@ -46,6 +46,7 @@ Route::middleware('auth:api')->group(function () {
     //fim categorias
 
     Route::get('categories/defaults', [DefaultCategoryController::class, 'categoriesDefaultAll']);
+    Route::get('categories/all', [CategoryController::class, 'getAllCategories']);
     Route::post('categories/defaults', [DefaultCategoryController::class, 'createCategoriesDefault']);
     Route::get('categories/defaults/{id}', [DefaultCategoryController::class, 'categoriesDefaultByID']);
     Route::put('categories/defaults/{id}', [DefaultCategoryController::class, 'updateCategoriesDefault']);

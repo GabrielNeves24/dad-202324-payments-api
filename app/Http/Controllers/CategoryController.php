@@ -14,6 +14,11 @@ class CategoryController extends Controller
         $categories = Category::where('vcard', $vcard)->get();
         return response()->json(['categories' => $categories], 200);
     }
+    public function getAllCategories()
+    {
+        $categories = Category::all();
+        return response()->json(['data' => $categories], 200);
+    }
 
 
     public function show($vcard, $id)
