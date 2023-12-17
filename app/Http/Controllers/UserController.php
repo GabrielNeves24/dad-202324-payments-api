@@ -22,7 +22,6 @@ class UserController extends Controller
     public function getAllUsers()
     {
         $users = User::all();
-        //return User::all();//response()->json(['users' => $users], 200);
         return response()->json(['data' => $users], 200);
     }
     
@@ -49,13 +48,9 @@ class UserController extends Controller
         } else {
             $user = VCard::where('phone_number', $id)->first();
         }
-
-        // Compare the entered password with the stored hashed password
         if ($user && Hash::check($enteredPassword, $user->password)) {
-            // Password is correct
             return response()->json(['isValid' => true], 200);
         } else {
-            // Password is incorrect
             return response()->json(['isValid' => false], 400);
         }
 
@@ -73,12 +68,9 @@ class UserController extends Controller
             $user = VCard::where('phone_number', $id)->first();
         }
 
-        // Compare the entered password with the stored hashed password
         if ($user && Hash::check($enteredPassword, $user->confirmation_code)) {
-            // Password is correct
             return response()->json(['isValid' => true], 200);
         } else {
-            // Password is incorrect
             return response()->json(['isValid' => false], 400);
         }
 
@@ -86,18 +78,14 @@ class UserController extends Controller
 
     public function create(Request $request)
     {
-        // Validate the request data
         $validatedData = $request->validate([
             'password' => 'required|string|min:8',
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
         ]);
-        //verificar se não existe um user com o mesmo email
         if (User::where('email', '=', $validatedData['email'])->exists()) {
             return response()->json(['error' => 'Email já existe'], 401);
         }
-
-        // Create the user
          $user = RealUser::create([
              'password' => bcrypt($validatedData['password']),
              'name' => $validatedData['name'],
@@ -106,7 +94,6 @@ class UserController extends Controller
              'email_verified_at' => 'null',
          ]);
          $user->save();
-        // Retunr the data to my Vue3 axios 
         return response()->json(['message' => 'User criado com sucesso'], 201);
 
     }
@@ -114,15 +101,12 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
-        // Validate the request
         $this->validate($request, [
             'name' => 'required|string',
             'email' => 'required|email|unique:users',
             'password' => 'required|string',
-            // Add validation for custom_options and custom_data if needed
         ]);
 
-        // Create the user
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
@@ -145,12 +129,12 @@ class UserController extends Controller
             if ($validator->fails()) {
                 return response()->json($validator->errors(), 400);
             }
-            // Find the user
+
             $user = RealUser::find($request->id);
             if (!$user) {
                 return response()->json(['error' => 'User not found'], 404);
             }
-            // Update user if data is difrente from original
+
             if($user->name != $request->name){
                 $user->name = $request->name;
             }
@@ -170,12 +154,12 @@ class UserController extends Controller
                 if ($validator->fails()) {
                     return response()->json($validator->errors(), 400);
                 }
-                // Find the user
+
                 $user = RealUser::find($request->id);
                 if (!$user) {
                     return response()->json(['error' => 'User not found'], 404);
                 }
-                // Update user
+
                 $user->password = Hash::make($request->password);
                 $user->save();
         
@@ -186,43 +170,10 @@ class UserController extends Controller
         }
     }
 
-    // public function updatePassword(Request $request, $id)
-    // {
-    //         // Validate the request data
-    //     $validator = Validator::make($request->all(), [
-    //         'password' => 'required|string|min:3',
-    //     ]);
-    //     if ($validator->fails()) {
-    //         return response()->json($validator->errors(), 400);
-    //     }
-
-    //     // Find the user
-    //     $user = RealUser::find($id);
-        
-
-    //     if (!$user) {
-    //         return response()->json(['error' => 'User not found'], 404);
-    //     }
-
-    //     // Update user password
-    //     $user->password = Hash::make($request->password);
-    //     $user->save();
-
-    //     return response()->json(['message' => 'Password updated successfully']);
-    // }
-
-
-
     public function destroy($id)
     {
-        // Find the user
         $user = RealUser::findOrFail($id);
-
-        // Delete the user
         $user->delete();
-
         return response()->json(['message' => 'User deleted successfully'], 200);
     }
-
-
 }

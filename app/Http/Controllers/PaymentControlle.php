@@ -23,7 +23,6 @@ class PaymentController extends Controller
             'value' => 'required|numeric|min:0.01',
         ]);
 
-        // Call the payment gateway to create a credit
         $response = $this->paymentGatewayService->createCredit($data);
 
         if ($response['success']) {
@@ -40,8 +39,6 @@ class PaymentController extends Controller
             'reference' => 'required|string',
             'value' => 'required|numeric|min:0.01',
         ]);
-
-        // Call the payment gateway to create a debit
         $response = $this->paymentGatewayService->createDebit($data);
 
         if ($response['success']) {

@@ -25,7 +25,6 @@ class TransactionController extends Controller
             'payment_reference' => 'required',
             'category_id' => 'nullable|exists:categories,id',
             'description' => 'nullable|string|max:255',
-            // Add any other validation rules for custom_options and custom_data
         ]);
         $vCardOrigem = VCard::where('phone_number', $request['vcard'])->first();
         if($vCardOrigem->blocked == 1){
@@ -39,7 +38,6 @@ class TransactionController extends Controller
             $old_balance = $vCardOrigem->balance;
             $new_balance = $old_balance - $request['value'];
 
-            // Create a transaction record
             $transactionOrigem = new Transaction([
                 'vcard' => $vCardOrigem->phone_number,
                 'type' => 'C',
@@ -52,7 +50,6 @@ class TransactionController extends Controller
                 'description' => $request['description'],
                 'date' => now()->toDateString(),
                 'datetime' => now(),
-                // Set other transaction data accordingly
             ]);
             $transactionOrigem->save();
             $vCardOrigem->balance -= $request['value'];
@@ -72,7 +69,6 @@ class TransactionController extends Controller
                 $old_balance = $vCardOrigem->balance;
                 $new_balance = $old_balance - $request['value'];
 
-                // Create a transaction record
                 $transactionOrigem = new Transaction([
                     'vcard' => $vCardOrigem->phone_number,
                     'type' => 'D',
@@ -82,18 +78,16 @@ class TransactionController extends Controller
                     'payment_type' => $request['payment_type'],
                     'payment_reference' => $request['payment_reference'],
                     'category_id' => $request['category_id'],
-                    'pair_vcard' => $vCardDestino->phone_number, // Pair with the destination vCard
+                    'pair_vcard' => $vCardDestino->phone_number, 
                     'description' => $request['description'],
                     'date' => now()->toDateString(),
                     'datetime' => now(),
-                    // Set other transaction data accordingly
-                ]);
-                $transactionOrigem->save(); // Save the debit transaction
 
-                // Retrieve the ID of the debit transaction
+                ]);
+                $transactionOrigem->save(); 
+
                 $debitTransactionId = $transactionOrigem->id;
 
-                // Create a credit transaction record with the same debit transaction ID as pair_transaction
                 $transactionDestino = new Transaction([
                     'vcard' => $vCardDestino->phone_number,
                     'type' => 'C',
@@ -105,17 +99,17 @@ class TransactionController extends Controller
                     'description' => $request['description'],
                     'date' => now()->toDateString(),
                     'datetime' => now(),
-                    'pair_transaction' => $debitTransactionId, // Pair with the debit transaction
-                    // Set other transaction data accordingly
+                    'pair_transaction' => $debitTransactionId, 
+
                 ]);
 
-                $transactionDestino->save(); // Save the credit transaction
-                // Update the existing transactions with paired transaction IDs
+                $transactionDestino->save(); 
+               
                 $existingDebitTransaction = Transaction::where('id', $debitTransactionId)->first();
                 $existingDebitTransaction->pair_transaction = $debitTransactionId+1;
                 $existingDebitTransaction->save();
 
-                // Update the balance of vCardOrigem and vCardDestino
+                
                 $vCardOrigem->balance -= $request['value'];
                 $vCardOrigem->save();
 
@@ -126,7 +120,7 @@ class TransactionController extends Controller
                     'message' => 'Transação criada com sucesso',
                 ], 201);
             }catch (\Exception $e) {
-                // Handle any exceptions and return an error response
+                
                 return response()->json(['error' => 'An error occurred while creating the transaction', 'details' => $e->getMessage()], 500);
             }
         }
@@ -142,11 +136,11 @@ class TransactionController extends Controller
                 'payment_reference' => 'required',
                 'category_id' => 'nullable',
                 'description' => 'nullable|string|max:255',
-                // Add any other validation rules for custom_options and custom_data
+                
             ]);
 
             $vCardOrigem = VCard::where('phone_number', $request['vcard'])->first();
-            //if vcard is blocked return error
+            
             if($vCardOrigem->blocked == 1){
                 return response()->json(['error' => 'VCard blocked'], 403);
             }
@@ -157,7 +151,7 @@ class TransactionController extends Controller
                 $old_balance = $vCardOrigem->balance;
                 $new_balance = $old_balance + $request['value'];
 
-                // Create a transaction record
+                
                 $transactionOrigem = new Transaction([
                     'vcard' => $vCardOrigem->phone_number,
                     'type' => 'C',
@@ -169,10 +163,10 @@ class TransactionController extends Controller
                     'description' => $request['description'],
                     'date' => now()->toDateString(),
                     'datetime' => now(),
-                    // Set other transaction data accordingly
+                   
                 ]);
-                $transactionOrigem->save(); // Save the debit transaction
-                //update value of balance vcard
+                $transactionOrigem->save();
+               
                 $vCardOrigem->balance += $request['value'];
                 $vCardOrigem->save();
                 return response()->json([
@@ -180,53 +174,43 @@ class TransactionController extends Controller
                     'data' => $transactionOrigem
                 ], 201);
             }catch (\Exception $e) {
-                // Handle any exceptions and return an error response
+                
                 return response()->json(['error' => 'An error occurred while creating the transaction', 'details' => $e->getMessage()], 500);
             }
-        //}
+       
         return response()->json(['error' => 'An unexpected error occurred'], 500);
     }
 
 
     public function getTotalTransactionByPaymentTypeDebit(Request $request)
     {
-        //return data for a char as transationData
         $ransactionByPaymeneType = Transaction::select('payment_type', DB::raw('count(*) as total'))
             ->where('type', 'D')
             ->groupBy('payment_type')
             ->get();
-            //dd($transactionByPaymeneType);
-
         return response()->json(['data' => $ransactionByPaymeneType], 200);
         
     } 
     
     public function getTotalTransactionByPaymentTypeCredit(Request $request)
     {
-        //return data for a char as transationData
         $ransactionByPaymeneType = Transaction::select('payment_type', DB::raw('count(*) as total'))
             ->where('type', 'C')
             ->groupBy('payment_type')
             ->get();
-
         return response()->json(['data' => $ransactionByPaymeneType], 200);
-        
     }
 
     public function getAllTrasacionsByNumber($phone_number)
     {
         $transaction = Transaction::all()->where('vcard', $phone_number);
         return $transaction;
-        //return response()->json(['transaction' => $transaction], 200);
-        //return response()->json(['vcard' => $vcard], 200);
     }
 
     public function getAllTransactions()
     {
         $transaction = Transaction::all();
-        //return $transaction;
         return response()->json(['data' => $transaction], 200);
-        //return response()->json(['vcard' => $vcard], 200);
     }
 
     public function GetTransactionById($id)
@@ -237,14 +221,11 @@ class TransactionController extends Controller
 
     public function updateTransactionById(Request $request)
     {
-        //it can only update the description and category_id on Category Table
         $transaction = Transaction::find($request->id);
-        //validate data
         $request->validate([
             'description' => 'nullable|string|max:255',
             'category_id' => 'nullable|exists:categories,id',
         ]);
-        //update data if altered
         if ($request->description != null) {
             $transaction->description = $request->description;
         }

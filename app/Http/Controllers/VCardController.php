@@ -30,28 +30,20 @@ class VCardController extends Controller
     public function getVCardsbyphoneNumber($phone_number)
     {
         $vcard = VCard::findOrFail($phone_number);
-        //return $vcard;
         return response()->json(['data' => $vcard], 200);
     }
 
     public function getVCardImage($phone_number)
     {
-        // Find the user's image file path
         $vcard = VCard::findOrFail($phone_number);
         $imagePath = public_path("storage/fotos/{$vcard->photo_url}");
-
-        // Check if the image file exists
         if (file_exists($imagePath)) {
-            // Return the image as a response
             return response()->file($imagePath, ['Content-Type' => 'image/jpg']);
         }
-
-        // If the image doesn't exist, return a default image or an error response
         $defaultImagePath = public_path('storage/fotos/default.jpg');
         if (file_exists($defaultImagePath)) {
             return response()->file($defaultImagePath, ['Content-Type' => 'image/jpg']);
         } else {
-            // If the default image doesn't exist, you can return a 404 response
             return response('Image not found', 404);
         }
     }
@@ -63,23 +55,17 @@ class VCardController extends Controller
         
         if($request->filled('name') && $request->filled('email')){
             $vcard = VCard::findOrFail($phone_number);
-            // Validate the request
             $this->validate($request, [
                 'name' => 'string',
                 'email' => 'email|unique:users,email,' . $vcard->id,
                 'photo_url' => 'nullable|max:4096',
             ]);
-
-            
-
-            // Upload the photo if it exists
             if ($request->hasFile('photo_url')) {
-                $randomString = Str::random(6); // Using Laravel's Str::random for generating random string
+                $randomString = Str::random(6); 
                 $file = $request->file('photo_url');
                 $filename = $vcard->phone_number . '_' . $randomString . '.' . $file->getClientOriginalExtension();
                 $file->storeAs('fotos', $filename, 'public');
-                $vcard->photo_url = $filename;  
-                // Update the user
+                $vcard->photo_url = $filename;
                 $vcard->update([
                     'name' => $request->name,
                     'email' => $request->email,
@@ -87,7 +73,6 @@ class VCardController extends Controller
                 ]); 
                 return response()->json(['vcard' => $vcard], 200);
             }else{
-                // Update the user
                 $vcard->update([
                     'name' => $request->name,
                     'email' => $request->email,
@@ -97,35 +82,23 @@ class VCardController extends Controller
             
         }else 
         if($request->filled('password') || $request->filled('confirmation_code')){
-            // Validate the request
-
-            // Find the VCard
             $vcard = VCard::find($phone_number);
             if (!$vcard) {
                 return response()->json(['error' => 'VCard not found'], 404);
             }
-            //update only if fields are present and not empty
             if ($request->filled('password')) {
                 $validated =$this->validate($request, [
                     'password' => 'string|min:6',
-                    //'confirmation_code' => 'integer|digits:4',
                 ]);
                 $vcard->password = Hash::make($validated['password']);
             }
             if ($request->filled('confirmation_code')) {
                 $validated =$this->validate($request, [
-                    //'password' => 'string|min:6',
                     'confirmation_code' => 'integer|digits:4',
                 ]);
                 $vcard->confirmation_code = Hash::make($validated['confirmation_code']);
             }
             $vcard->save();
-
-            // // Update the VCard
-            // $vcard->password = Hash::make($validated['password']);
-            // $vcard->confirmation_code = Hash::make($validated['confirmation_code']);
-            // $vcard->save();
-
             return response()->json(['message' => 'VCard password updated successfully'], 200);
         }else{
             return response()->json(['message' => 'VCard not updated'], 404);
@@ -134,7 +107,6 @@ class VCardController extends Controller
 
     public function getTransactionsByMonth(Request $request)
     {
-        //dd("aqui");
         $transactions = Transaction::select(
             DB::raw('MONTH(datetime) as month'),
             DB::raw('SUM(CASE WHEN type = "C" THEN value ELSE -value END) as total_value'),
@@ -143,15 +115,12 @@ class VCardController extends Controller
             )
             ->groupBy('month')
             ->get();
-           // return $transactions;
-        // Map the result to your desired format
-        //dd($transactions);
         $result = $transactions->map(function ($item) {
             return [
-                'name' => date("M", mktime(0, 0, 0, $item->month, 1, 2000)), // Converts month number to month name
+                'name' => date("M", mktime(0, 0, 0, $item->month, 1, 2000)), 
                 'pl' => $item->total_value,
                 'avg' => $item->avg_value,
-                'inc' => $item->transaction_count, // or any other calculation you need
+                'inc' => $item->transaction_count, 
             ];
         });
 
@@ -167,15 +136,12 @@ class VCardController extends Controller
             )
             ->groupBy('day')
             ->get();
-           // return $transactions;
-        // Map the result to your desired format
-        //dd($transactions);
         $result = $transactions->map(function ($item) {
             return [
-                'name' => date("d", mktime(0, 0, 0, 1, $item->day, 2000)), // Converts month number to month name
+                'name' => date("d", mktime(0, 0, 0, 1, $item->day, 2000)), 
                 'pl' => $item->total_value,
                 'avg' => $item->avg_value,
-                'inc' => $item->transaction_count, // or any other calculation you need
+                'inc' => $item->transaction_count, 
             ];
         });
 
@@ -190,7 +156,7 @@ class VCardController extends Controller
         )
         ->join('categories', 'transactions.category_id', '=', 'categories.id')
         ->where('transactions.vcard', $phone_number)
-        ->where('transactions.type', 'D') // Assuming 'D' stands for Debits
+        ->where('transactions.type', 'D') 
         ->groupBy('categories.name')
         ->get();
 
@@ -200,71 +166,36 @@ class VCardController extends Controller
             'categoryData' => $categorySpending,
             'topCategories' => $topCategories
         ]);
-    }
-
-
-
-    // public function updateProfile(Request $request, $phone_number)
-    // {
-    //     $vcard = VCard::findOrFail($phone_number);
-
-    //     // Validate the request
-    //     $this->validate($request, [
-    //         'name' => 'string',
-    //         'email' => 'email|unique:users,email,' . $vcard->id,
-    //         'password' => 'required',
-    //     ]);
-
-    //     // Check if the password is correct
-    //     if (!Auth::attempt(['email' => $vcard->email, 'password' => $request->password])) {
-    //         return response()->json(['error' => 'Invalid password'], 401);
-    //     }
-
-    //     // Update the user
-    //     $vcard->update([
-    //         'name' => $request->name,
-    //         'email' => $request->email,
-    //     ]);
-
-    //     return response()->json(['vcard' => $vcard], 200);
-    // }
-
-    
+    }   
 
     public function getLast30DaysTransactions(Request $request, $phone_number)
     {
         $thirtyDaysAgo = Carbon::now()->subDays(30);
-    
-        // Retrieve the initial old_balance from the oldest transaction within the last 30 days
         $initialTransaction = Transaction::where('vcard', $phone_number)
             ->where('date', '>=', $thirtyDaysAgo)
             ->orderBy('date', 'asc')
             ->first(['old_balance']);
     
-        // If there's no transaction in the last 30 days, set a default or handle accordingly
         $old_balance = $initialTransaction ? $initialTransaction->old_balance : 0;
-    
         $transactions = Transaction::where('vcard', $phone_number)
             ->where('date', '>=', $thirtyDaysAgo)
-            ->groupBy(DB::raw('DATE(date)')) // Group by date
+            ->groupBy(DB::raw('DATE(date)')) 
             ->orderBy('date', 'asc')
             ->get([
                 DB::raw('DATE(date) as date'),
                 DB::raw('SUM(CASE WHEN type = "C" THEN value ELSE 0 END) as daily_credit'),
                 DB::raw('SUM(CASE WHEN type = "D" THEN value ELSE 0 END) as daily_debit')
             ]);
-    
-        // Initialize the running balance with the old_balance from the oldest transaction
+
         $running_balance = $old_balance;
         $formattedTransactions = $transactions->map(function ($transaction) use (&$running_balance) {
             $date = Carbon::createFromFormat('Y-m-d', $transaction->date);
             
-            // Calculate the running balance for each day
             $running_balance += $transaction->daily_credit;
             $running_balance -= $transaction->daily_debit;
     
             return [
-                'date' => $date->format('d/m'), // Format as 'day/month'
+                'date' => $date->format('d/m'), 
                 'daily_credit' => $transaction->daily_credit,
                 'daily_debit' => $transaction->daily_debit,
                 'running_balance' => $running_balance
@@ -277,9 +208,7 @@ class VCardController extends Controller
 
     public function getCategoriesbyphoneNumberDebit($phone_number)
     {
-        //$vcard = VCard::findOrFail($phone_number);
         $categories = Category::where('vcard', $phone_number)->where('type', 'D')->get();
-        //caso vazia sem categorias
         if($categories->isEmpty()){
             return response()->json(['message' => `VCard $phone_number não tem categorias`], 404);
         }
@@ -288,9 +217,7 @@ class VCardController extends Controller
 
     public function getCategoriesbyphoneNumberCredit($phone_number)
     {
-        //$vcard = VCard::findOrFail($phone_number);
         $categories = Category::where('vcard', $phone_number)->where('type', 'C')->get();
-        //caso vazia sem categorias
         if($categories->isEmpty()){
             return response()->json(['message' => `VCard $phone_number não tem categorias`], 404);
         }
@@ -299,9 +226,7 @@ class VCardController extends Controller
 
     public function getTransactionsbyphoneNumber($phone_number)
     {
-        //$vcard = VCard::findOrFail($phone_number);
         $transactions = Transaction::where('vcard', $phone_number)->orderBy('date','desc')->get();
-        //caso vazia sem categorias
         if($transactions->isEmpty()){
             return response()->json(['message' => `VCard $phone_number não tem transações`], 404);
         }
@@ -311,70 +236,35 @@ class VCardController extends Controller
     public function updateConfirmationCode(Request $request, $phone_number)
     {
         $vcard = VCard::findOrFail($phone_number);
-
-        // Validate the request
         $this->validate($request, [
             'confirmation_code' => 'integer|digits:4',
             'password' => 'string|min:6',
         ]);
 
-        // Check if the password is correct
         if (!Auth::attempt(['email' => $vcard->email, 'password' => $request->password])) {
             return response()->json(['error' => 'Invalid password'], 401);
         }
-
-        // Update the confirmation code
         $vcard->update([
             'confirmation_code' => $request->confirmation_code,
         ]);
 
         return response()->json(['vcard' => $vcard], 200);
     }
-
-    // public function updatePassword(Request $request, $phone_number)
-    // {
-    //     $vcard = VCard::findOrFail($phone_number);
-
-    //     // Validate the request
-    //     $this->validate($request, [
-    //         'current_password' => 'required',
-    //         'new_password' => 'required|confirmed',
-    //     ]);
-
-    //     // Check if the current password is correct
-    //     if (!Auth::attempt(['email' => $vcard->email, 'password' => $request->current_password])) {
-    //         return response()->json(['error' => 'Invalid password'], 401);
-    //     }
-
-    //     // Update the password
-    //     $vcard->update([
-    //         'password' => bcrypt($request->new_password),
-    //     ]);
-
-    //     return response()->json(['vcard' => $vcard], 200);
-    // }
-
     public function updatePhoto(Request $request, $phone_number)
     {
         $vcard = VCard::findOrFail($phone_number);
-
-        // Validate the request
         $this->validate($request, [
             'photo' => 'required|image',
             'password' => 'required',
         ]);
 
-        // Check if the password is correct
         if (!Auth::attempt(['email' => $vcard->email, 'password' => $request->password])) {
             return response()->json(['error' => 'Invalid password'], 401);
         }
-
-        // Save the new photo
         $photo = $request->file('photo');
         $photoName = time() . '.' . $photo->getClientOriginalExtension();
         $photo->storeAs('public/fotos', $photoName);
 
-        // Update the user's photo URL
         $vcard->update([
             'photo_url' => $photoName,
         ]);
@@ -396,8 +286,6 @@ class VCardController extends Controller
         try {
             DB::beginTransaction();
             $hasTransactions = Transaction::where('vcard', $phone_number)->exists();
-
-            //se categorias exisitirem nas trnansacaoes apenas soft delete else force delete
             if ($hasTransactions) {
                 $categories = Category::where('vcard', $phone_number)->get();
                 foreach ($categories as $category) {
@@ -410,15 +298,12 @@ class VCardController extends Controller
                 }
             } 
 
-            // Conditions for deletion
             if ($balance == 0) {
                 if ($hasTransactions) {
-                    // Perform a soft delete if there are transactions
                     $vcard->delete();
                     DB::commit();
                     return response()->json(['message' => "VCard $nome eliminado (Soft Delete) com sucesso"], 200);
                 } else {
-                    // Force delete if no transactions are present
                     $vcard->forceDelete();
                     DB::commit();
                     return response()->json(['message' => "VCard $nome eliminado permanentemente com sucesso"], 200);
@@ -437,7 +322,6 @@ class VCardController extends Controller
 
     public function updateVCard(Request $request, $id){
         dd($request);
-        // Validate the incoming request data
         $validator = Validator::make($request->all(), [
             'id' => 'integer',
             'name' => 'string|max:255',
@@ -449,15 +333,12 @@ class VCardController extends Controller
             return response()->json($validator->errors(), 400);
         }
         $dataValidated = $validator->validated();
-        
-        // Check if the VCard with the provided phone number exists
         $vcard = VCard::where('phone_number', $id)->first();
 
         if (!$vcard) {
             return response()->json(['message' => "VCard $id não encontrado"], 404);
 
         }
-        // Update only if fields are present and not empty
         if ($request->filled('name')) {
             $vcard->name = $dataValidated['name'];
 
@@ -468,12 +349,11 @@ class VCardController extends Controller
 
 
         if ($request->hasFile('photo_url')) {
-            $randomString = Str::random(6); // Using Laravel's Str::random for generating random string
+            $randomString = Str::random(6); 
             $file = $request->file('photo_url');
             $filename = $vcard->phone_number . '_' . $randomString . '.' . $file->getClientOriginalExtension();
             $file->storeAs('fotos', $filename, 'public');
             $vcard->photo_url = $filename;
-            //$vCard->save();
         }
 
         $vcard->save();
@@ -483,13 +363,13 @@ class VCardController extends Controller
 
 
     public function updateVCardUser(Request $request, $phone_number){
-        //caso o vcard não exista, retorna erro
+
         $teste = $phone_number;
         if(!VCard::where('phone_number', $phone_number)->exists()){
             return response()->json(['message' => `VCard $phone_number não encontrado`], 404);
         }
         $vcard = VCard::findOrFail($phone_number);
-        //update only max_debit
+
         $vcard->update([
             'max_debit' => $request->max_debit,
             'blocked' => $request->blocked,
@@ -499,15 +379,10 @@ class VCardController extends Controller
 
 
     public function deleteCategorybyphoneNumber(Request $request, $id){
-        // Validate the incoming request data
-        // $validatedData = $request->validate([
-        //     'id' => 'required|integer', // Add any validation rules you need
-        // ]);
+
         $id = $request->id;
         $category = Category::findOrFail($id);
-        //if category has alreay bem used in transactions, do soft delete only else delete
         if(Transaction::where('category_id', $id)->exists()){
-            //delete only at delete_at i dont have updated_at
             $category->delete();
             return response()->json(['message' => `Categoria $id eliminada (Soft) com sucesso`], 200);
         }else{
@@ -518,9 +393,9 @@ class VCardController extends Controller
 
     public function getCategorybyphoneNumberAndId($phone_number, $id)
     {
-        //$vcard = VCard::findOrFail($phone_number);
+
         $category = Category::findOrFail($id);
-        // caso nao exista devolve erro
+
         if(!$category){
             return response()->json(['message' => `Categoria $id não encontrada`], 404);
         }
@@ -530,14 +405,12 @@ class VCardController extends Controller
     
 
     public function updatePasswordVCard(Request $request, $id){
-        // Validate the incoming request data
+
         $validatedData = $request->validate([
             'id' => 'required|integer', 
             'confirmation_code' => 'integer|digits:4',
             'password' => 'required|string',
         ]);
-
-        // Check if the VCard with the provided phone number exists
         $vcard = VCard::where('phone_number', $request->id)->first();
 
         if (!$vcard) {

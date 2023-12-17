@@ -18,9 +18,6 @@ use App\Models\DefaultCategory;
 use App\Models\Category;
 use Exception;
 
-
-
-
 class AuthController extends Controller
 {
     private function passportAuthenticationData($username, $password)
@@ -37,12 +34,10 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        //if username is blocked return error
         $vCard = User::where('username', '=', $request->username)->first();
         if($vCard->blocked == 1){
             return response()->json(['error' => 'Utilizador Bloqueado! Contactar administração'], 403);
         }
-        //if is soft deleted return error
         if($vCard->deleted_at != null){
             return response()->json(['error' => 'VCard Eliminado!'], 403);
         }
@@ -66,77 +61,21 @@ class AuthController extends Controller
         $token->delete();
         return response(['msg' => 'Token revoked'], 200);
     }
-    
-    // public function register(Request $request)
-    // {
-    //     // Validate the request data
-    //     $validatedData = $request->validate([
-    //         'phone_number' => 'required|string|regex:/^9[1236]\d{7}$/|unique:users',
-    //         'password' => 'required|string|min:8',
-    //         'name' => 'required|string|max:255',
-    //         'email' => 'required|string|email|max:255|unique:users',
-    //         'photo' => 'nullable|image|max:2048',
-    //         'confirmation_code' => 'required|digits:4',
-    //     ]);
-
-    //     // Create the user
-    //     $user = User::create([
-    //         'phone_number' => $validatedData['phone_number'],
-    //         'password' => bcrypt($validatedData['password']),
-    //         'name' => $validatedData['name'],
-    //         'email' => $validatedData['email'],
-    //         'confirmation_code' => $validatedData['confirmation_code'],
-    //         'max_debit' => 5000,
-    //     ]);
-
-    //     // Create a new VCard for the user
-    //     $user->vcard()->create([
-            
-    //     ]);
-
-    //     // Upload the photo if it exists
-    //     if ($request->hasFile('photo')) {
-    //         $photo = $request->file('photo');
-    //         $filename = $user->id . '.' . $photo->getClientOriginalExtension();
-    //         $photo->storeAs('public/photos', $filename);
-    //         $user->photo = $filename;
-    //         $user->save();
-    //     }
-
-    //     // Issue a token for the user
-    //     $token = $user->createToken('auth_token')->plainTextToken;
-
-    //     // Return the token as a response
-    //     return response()->json([
-    //         'access_token' => $token,
-    //         'token_type' => 'Bearer',
-    //     ]);
-    // }
-
     public function register(Request $request)
     {
         return $this->registerCliente($request);
-        // if ($request->has('phone_number')) {
-        //     return $this->registerCliente($request);
-        // } else {
-        //     return $this->registerUser($request);
-        // }
     }
 
     public function registerUser(Request $request)
     {
-        // Validate the request data
         $validatedData = $request->validate([
             'password' => 'required|string|min:8',
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
         ]);
-        //verificar se não existe um user com o mesmo email
         if (User::where('email', '=', $validatedData['email'])->exists()) {
             return response()->json(['error' => 'Email já existe'], 401);
         }
-
-        // Create the user
          $user = User::create([
              'password' => bcrypt($validatedData['password']),
              'name' => $validatedData['name'],
@@ -146,11 +85,7 @@ class AuthController extends Controller
          ]);
          $user->save();
 
-
-        // Issue a token for the user
         $token = $user->createToken('auth_token')->accessToken;
-
-        // Retunr the data to my Vue3 axios 
         return response()->json([
             'user' => $user,
             'access_token' => $token,
@@ -160,7 +95,6 @@ class AuthController extends Controller
 
     public function registerCliente(Request $request)
     {
-        // Validate the request data
         $validatedData = $request->validate([
             'phone_number' => 'required|string|regex:/^9[1236]\d{7}$/|unique:vcards',
             'password' => 'required|string|min:8',
@@ -169,15 +103,14 @@ class AuthController extends Controller
             'photo_url' => 'nullable|image|mimes:jpg,jpeg,png|max:4096',
             'confirmation_code' => 'required|digits:4',
         ]);
-        //verificar se não existe um vcard com o mesmo PHONE_NUMBER
         if (Vcard::where('phone_number', '=', $validatedData['phone_number'])->exists()) {
             return response()->json(['error' => 'Número de telefone já existe'], 401);
         }
-        //verificar se não existe um user/vcards(view) com o mesmo email
+
         if (User::where('email', '=', $validatedData['email'])->exists()) {
             return response()->json(['error' => 'Email já existe'], 401);
         }
-        //verificar se todos os dados sao validos
+
         $dataValidated = Validator::make($request->all(), [
             'phone_number' => 'required|string|regex:/^9[1236]\d{7}$/|unique:vcards',
             'password' => 'required|string|min:8',
@@ -191,7 +124,7 @@ class AuthController extends Controller
         }
 
         try{
-             // Upload the photo if it exists
+
              if ($request->hasFile('photo_url')) {
                  $randomString = Str::random(6); 
                  $file = $request->file('photo_url');
@@ -244,12 +177,12 @@ class AuthController extends Controller
             $user = Vcard::where('phone_number', '=', $request->user)->firstOrFail();
         }
 
-        // Compare the entered password with the stored hashed password
+
         if (Hash::check($enteredPassword, $user->password)) {
-            // Password is correct
+
             return response()->json(['message' => 'Password is correct'], 200);
         } else {
-            // Password is incorrect
+
             return response()->json(['message' => 'Password is incorrecttttt'], 400);
         }
     }

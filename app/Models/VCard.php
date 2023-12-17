@@ -12,10 +12,7 @@ use Illuminate\Notifications\Notifiable;
 class VCard extends Model
 {
     use HasFactory, Notifiable, SoftDeletes;
-    //usar a tabela vcards
     protected $table = 'vcards';
-    //id da tabela é phone_number
-    //protected $primaryKey = 'phone_number';
     protected $primaryKey = 'phone_number';
 
 

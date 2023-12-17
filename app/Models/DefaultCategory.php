@@ -8,10 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 class DefaultCategory extends Model
 {
     use HasFactory;
-    // no timestamps
+
     public $timestamps = false;
 
-    //table name categories
+
     protected $table = 'default_categories';
 
     protected $fillable = ['name', 'type'];

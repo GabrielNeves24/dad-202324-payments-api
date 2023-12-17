@@ -21,7 +21,6 @@ class DefaultCategoryController extends Controller
 
     public function createCategoriesDefault(Request $request)
     {
-        //valide data
         $validatedData = $request->validate([
             'name' => 'required|max:255',
             'type' => 'required|max:1',
@@ -49,10 +48,5 @@ class DefaultCategoryController extends Controller
         $defaultCategory = DefaultCategory::findOrFail($id);
         return response()->json(['data' => $defaultCategory], 200);
     }
-
-    //methods store, 
-    //update, and 
-    //destroy 
-
 }
 

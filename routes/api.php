@@ -29,14 +29,6 @@ use App\Models\Payment;
 */
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
-// ->middleware('auth:api');
-
-// Route::middleware('auth:api')->group(function () {
-//     Route::get('/users', function (Request $request) {
-//         return $request->user();
-//     });
-// });
-
 Route::middleware('auth:api')->group(function () {
     Route::get('users/me', [UserController::class, 'show_me']);
     Route::post('logout' , [AuthController::class, 'logout']);
@@ -51,7 +43,6 @@ Route::middleware('auth:api')->group(function () {
     Route::get('vcards/{phone_number}/categories/{id}', [VCardController::class, 'getCategorybyphoneNumberAndId']);
     Route::delete('vcards/{phone_number}/categories/{id}', [VCardController::class, 'deleteCategorybyphoneNumber']);
     Route::post('vcards/{phone_number}/categories', [CategoryController::class, 'addCategoryByPhoneNumber']);
-    //Route::get('vcards/{phone_number}/categories', [VCardController::class, 'getCategoriesbyphoneNumber']);
     //fim categorias
 
     Route::get('categories/defaults', [DefaultCategoryController::class, 'categoriesDefaultAll']);
@@ -79,17 +70,13 @@ Route::middleware('auth:api')->group(function () {
     //get user logon
     Route::get('users/{id}', [UserController::class, 'getUser']);
     Route::get('vcards', [VCardController::class, 'getAllVCards']);
-    //Route::get('vcards/{phone_number}', [VCardController::class, 'getVCardsbyphoneNumber']);
     Route::get('transactions', [TransactionController::class, 'getAllTransactions']);
     Route::put('users/{id}', [UserController::class, 'update']);
 
 
     //update info on Vcard
-    //Route::put('vcards/perfil/{id}', [VCardController::class, 'updateVCard']);
     Route::post('vcards/{phone_number}', [VCardController::class, 'update']);
-    //Route::put('vcards/password/{id}', [VCardController::class, 'updatePasswordVCard']);
     Route::put('users/perfil/{id}', [UserController::class, 'update']);
-    //Route::put('users/password/{id}', [UserController::class, 'updatePassword']);
     Route::delete('users/{id}', [UserController::class, 'destroy']);
 
 
@@ -106,40 +93,3 @@ Route::middleware('auth:api')->group(function () {
 
 });
 Route::get('vcards/{phone_number}/foto', [VCardController::class, 'getVCardImage']);
-
-Route::middleware('auth:vcard-api')->group(function () {
-    // Routes for VCard users protected by the 'vcard-api' guard
-    //Route::get('vcards', [VCardController::class, 'getAllVCards']);
-    
-    
-    
-    //Route::get('vcards/{phone_number}/transactions/all', [VCardController::class, 'getTransactionsbyphoneNumber']);
-    //Route::post('transactions/debit', [TransactionController::class, 'store']);
-    //Route::post('verify-password', [UserController::class, 'verifyPassword']);
-    
-});
-
-// Route::middleware('auth:api')->get('/user', function (Request $request) {
-//     return $request->user();
-// });
-
-// Route::get('users', [UserController::class, 'getAllUsers']);
-// Route::get('vcards', [VCardController::class, 'getAllVCards']);
-// Route::get('vcards/{phone_number}', [VCardController::class, 'getVCardsbyphoneNumber']);
-// Route::get('vcards/{phone_number}/foto', [VCardController::class, 'getVCardImage']);
-
-//Route::get('vcards/{vcard}/categories', [CategoryController::class, 'index']);
-//Route::get('vcards/{vcard}/categories/{id}', [CategoryController::class, 'show']);
-//Route::get('vcards/{vcard}/transactions', [TransactionController::class, 'getAllTrasacionsByNumber']);
-//Route::resource('vcards.categories', CategoryController::class);
-
-//Route::get('vcards/{phone_number}', [VCardController::class, 'show']);
-//Route::get('vcards/{phone_number}/foto', [VCardController::class, 'getVCardImage']);
-//Route::resource('vcards', VCardController::class);
-
-
-//Route::post('credit-transaction', [PaymentController::class, 'createCreditTransaction']);
-//Route::post('debit-transaction', [PaymentController::class, 'createDebitTransaction']);
-
-
-//http://dad-202324-payments-api.test/api/vcards/900000015/categories/900000015

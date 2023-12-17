@@ -267,7 +267,7 @@ class VCardsTableSeeder extends Seeder
         $paymentRef = null;
         $this->getRandomPayment($faker, $vCard['phoneNumber'], $type, $paymentType, $paymentRef);
 
-        $datetime = $d->format('Y-m-d h:i:s');
+        $datetime = $d->format('Y-m-d H:i:s');
         return [
             'vcard' => $vCard['phoneNumber'],
             'date' =>  $d->format('Y-m-d'),
@@ -306,7 +306,7 @@ class VCardsTableSeeder extends Seeder
         $paymentType = 'IBAN';
         $paymentRef = 'PT' . $faker->randomNumber($nbDigits = 8, $strict = true) . $faker->randomNumber($nbDigits = 8, $strict = true) . $faker->randomNumber($nbDigits = 7, $strict = true);
 
-        $datetime = $d->format('Y-m-d h:i:s');
+        $datetime = $d->format('Y-m-d H:i:s');
         return [
             'vcard' => $vCard['phoneNumber'],
             'date' =>  $d->format('Y-m-d'),
@@ -391,7 +391,7 @@ class VCardsTableSeeder extends Seeder
             }
             $vcardsToClose[] = [
                 'phone_number' => $vcard->phone_number,
-                'deleted_at' => $d->format('Y-m-d h:i:s')
+                'deleted_at' => $d->format('Y-m-d H:i:s')
             ];
             $d->addSeconds(rand(20, 60));
         }

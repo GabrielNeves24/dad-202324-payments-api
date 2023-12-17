@@ -31,33 +31,18 @@ class Transaction extends Model
         'custom_data',
     ];
 
-    /**
-     * Get the vCard associated with the transaction.
-     */
+
     public function vcard()
     {
         return $this->belongsTo(VCard::class, 'vcard', 'phone_number');
     }
 
-    /**
-     * Get the category associated with the transaction.
-     */
-    // public function category()
-    // {
-    //     return $this->belongsTo(Category::class, 'category_id');
-    // }
 
-    /**
-     * Get the pair transaction associated with the transaction.
-     */
     public function pairTransaction()
     {
         return $this->belongsTo(Transaction::class, 'pair_transaction');
     }
 
-    /**
-     * Get the paired vCard associated with the transaction.
-     */
     public function pairVCard()
     {
         return $this->belongsTo(VCard::class, 'pair_vcard', 'phone_number');
